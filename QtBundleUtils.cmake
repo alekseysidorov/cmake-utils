@@ -44,10 +44,10 @@ macro(DEPLOY_QML_MODULE _path)
 		#evil version
 		message(STATUS "Deployng ${_path} QtQuick module")
 		INSTALL(DIRECTORY ${_importPath} DESTINATION ${IMPORTSDIR} COMPONENT Runtime
-			REGEX "${_libPattern}" EXCLUDE
-			PATTERN "*.pdb" EXCLUDE
-			PATTERN "*${CMAKE_LINK_LIBRARY_SUFFIX}" EXCLUDE
+                        REGEX "${_libPattern}" EXCLUDE
+                        PATTERN "*.pdb" EXCLUDE
 		)
+        message(${IMPORTSDIR})
 	else()
 		message(STATUS "Could not deploy ${_path} QtQuick module")
 	endif()
@@ -71,7 +71,7 @@ macro(DEFINE_BUNDLE_PATHS _name)
                 set(RLIBDIR ${BINDIR})
 	elseif(APPLE)
 		set(BUNDLE_NAME ${_name}.app)
-		set(BUNDLE_PATH "${CMAKE_INSTALL_PREFIX}/${BINDIR}/${BUNDLE_NAME}")
+                set(BUNDLE_PATH "${CMAKE_INSTALL_PREFIX}/${BUNDLE_NAME}")
 		set(BINDIR ${BUNDLE_NAME}/Contents/MacOS)
 		set(LIBDIR ${BINDIR})
                 set(RLIBDIR ${BUNDLE_NAME}/Contents/Frameworks)
