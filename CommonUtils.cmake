@@ -35,11 +35,10 @@ macro(ADD_SIMPLE_LIBRARY target)
 		list(APPEND SOURCE SOURCE_MM} )
 	endif()
 
-	wrap_cpp(MOC_SRC ${HDR})
 	qt4_wrap_ui(UIS_H ${FORMS})
 
 	# This project will generate library
-	add_library(${target} STATIC ${SRC} ${MOC_SRC} ${HDR} ${UIS_H} ${SOURCE_MM})
+	add_library(${target} STATIC ${SRC} ${HDR} ${UIS_H} ${SOURCE_MM})
 
 	include_directories(${CMAKE_CURRENT_BINARY_DIR}
 		.
