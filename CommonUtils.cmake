@@ -43,7 +43,7 @@ macro(ADD_SIMPLE_LIBRARY target)
 	include_directories(${CMAKE_CURRENT_BINARY_DIR}
 		.
 	)
-	update_compiler_flags_library(${target})
+	update_compiler_flags(${target})
 
 	target_link_libraries(${target}
 		${QT_LIBRARIES}
