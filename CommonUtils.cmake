@@ -10,16 +10,12 @@ macro(UPDATE_COMPILER_FLAGS target)
 	endif()
 
         update_cxx_compiler_flag("-std=c++0x" CXX_0X)
-	if(NOT APPLE)
-		update_cxx_compiler_flag("-stdlib=libc++" LIBCXX)
-	endif()
         update_cxx_compiler_flag("-fvisibility=hidden" HIDDEN_VISIBILITY)
 
 	get_target_property(${target}_TYPE ${target} TYPE)
 	if (${target}_TYPE STREQUAL "STATIC_LIBRARY")
 		update_cxx_compiler_flag("-fPIC" PIC)
 	endif()
-
 	set_target_properties(${target} PROPERTIES COMPILE_FLAGS "${COMPILER_FLAGS}")
 endmacro()
 
