@@ -16,6 +16,12 @@ macro(DEPLOY_QT_PLUGIN _path)
 
 	set(name "${CMAKE_SHARED_LIBRARY_PREFIX}${name}")
         set(PLUGIN "${QT_PLUGINS_DIR}/${_dir}/${name}${CMAKE_SHARED_LIBRARY_SUFFIX}")
+        #trying to search lib with suffix 4
+        if(NOT EXISTS ${PLUGIN})
+            set(name "${name}4")
+            set(PLUGIN "${QT_PLUGINS_DIR}/${_dir}/${name}${CMAKE_SHARED_LIBRARY_SUFFIX}")
+        endif()
+
 	#message(${PLUGIN})
 	if(EXISTS ${PLUGIN})
 		message(STATUS "Deployng ${_path} plugin")
@@ -47,7 +53,6 @@ macro(DEPLOY_QML_MODULE _path)
                         REGEX "${_libPattern}" EXCLUDE
                         PATTERN "*.pdb" EXCLUDE
 		)
-        message(${IMPORTSDIR})
 	else()
 		message(STATUS "Could not deploy ${_path} QtQuick module")
 	endif()
