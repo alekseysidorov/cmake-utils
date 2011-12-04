@@ -1,9 +1,7 @@
 macro(MOC_WRAP_CPP outfiles)
 	if(CMAKE_VERSION VERSION_GREATER "2.8.4")
-		message(STATUS "Using cmake automoc")
 		set(CMAKE_AUTOMOC true)
 	else()
-		message(STATUS "Using moc_wrap_cpp")
 		# get include dirs
 		qt4_get_moc_flags(moc_flags)
 		qt4_extract_options(moc_files moc_options ${ARGN})
