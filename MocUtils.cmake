@@ -1,5 +1,5 @@
 macro(MOC_WRAP_CPP outfiles)
-	if(${CMAKE_PATCH_VERSION} VERSION_GREATER "4")
+	if(${CMAKE_VERSION} VERSION_GREATER "2.8.4")
 		set(CMAKE_AUTOMOC true)
 		return()
 	endif()
