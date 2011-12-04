@@ -1,5 +1,5 @@
 macro(MOC_WRAP_CPP outfiles)
-	if(CMAKE_VERSION VERSION_GREATER "2.8.8")
+	if(CMAKE_VERSION VERSION_GREATER "2.8.4")
 		message(STATUS "Using cmake automoc")
 		set(CMAKE_AUTOMOC true)
 	else()
