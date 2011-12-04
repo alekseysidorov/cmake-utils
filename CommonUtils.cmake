@@ -1,5 +1,6 @@
 include(CompilerUtils)
 include(QtBundleUtils)
+include(MocUtils)
 
 macro(UPDATE_COMPILER_FLAGS target)
 
@@ -32,9 +33,10 @@ macro(ADD_SIMPLE_LIBRARY target)
 	endif()
 
 	qt4_wrap_ui(UIS_H ${FORMS})
+        moc_wrap_cpp(MOC_SRCS ${HDR})
 
 	# This project will generate library
-	add_library(${target} STATIC ${SRC} ${HDR} ${UIS_H} ${SOURCE_MM})
+        add_library(${target} STATIC ${SRC} ${HDR} ${UIS_H} ${SOURCE_MM} ${MOC_SRCS})
 
 	include_directories(${CMAKE_CURRENT_BINARY_DIR}
 		.
