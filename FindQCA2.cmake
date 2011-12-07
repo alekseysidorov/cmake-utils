@@ -15,33 +15,26 @@
 # For details see the accompanying COPYING-CMAKE-SCRIPTS file.
 
 include(FindLibraryWithDebug)
+if(QCA2_INCLUDE_DIR AND QCA2_LIBRARIES)
+    # in cache already
+    set(QCA2_FOUND TRUE)
+else(QCA2_INCLUDE_DIR AND QCA2_LIBRARIES)
+    if(NOT WIN32)
+        find_package(PkgConfig)
+        pkg_check_modules(PC_QCA2 QUIET qca2)
+        set(QCA2_DEFINITIONS ${PC_QCA2_CFLAGS_OTHER})
+    endif(NOT WIN32)
 
-if (QCA2_INCLUDE_DIR AND QCA2_LIBRARIES)
+    find_library_with_debug(QCA2_LIBRARIES
+        WIN32_DEBUG_POSTFIX d
+        NAMES qca
+        HINTS ${PC_QCA2_LIBDIR} ${PC_QCA2_LIBRARY_DIRS} ${QT_LIBRARY_DIR})
 
-  # in cache already
-  set(QCA2_FOUND TRUE)
+    find_path(QCA2_INCLUDE_DIR QtCrypto
+        HINTS ${PC_QCA2_INCLUDEDIR} ${PC_QCA2_INCLUDE_DIRS} ${QT_INCLUDE_DIR}}
+        PATH_SUFFIXES QtCrypto)
 
-else (QCA2_INCLUDE_DIR AND QCA2_LIBRARIES)
-
-
-if (NOT WIN32)
-    find_package(PkgConfig)
-    pkg_check_modules(PC_QCA2 QUIET qca2)
-    set(QCA2_DEFINITIONS ${PC_QCA2_CFLAGS_OTHER})
-endif (NOT WIN32)
-
-find_library_with_debug(QCA2_LIBRARIES
-    WIN32_DEBUG_POSTFIX d
-    NAMES qca
-    HINTS ${PC_QCA2_LIBDIR} ${PC_QCA2_LIBRARY_DIRS} ${QT_LIBRARY_DIR})
-
-find_path(QCA2_INCLUDE_DIR QtCrypto
-    HINTS ${PC_QCA2_INCLUDEDIR} ${PC_QCA2_INCLUDE_DIRS} ${QT_INCLUDE_DIR}}
-    PATH_SUFFIXES QtCrypto)
-
-include(FindPackageHandleStandardArgs)
-find_package_handle_standard_args(QCA2 DEFAULT_MSG QCA2_LIBRARIES QCA2_INCLUDE_DIR)
-
-mark_as_advanced(QCA2_INCLUDE_DIR QCA2_LIBRARIES)
-
-endif (QCA2_INCLUDE_DIR AND QCA2_LIBRARIES)
+    include(FindPackageHandleStandardArgs)
+    find_package_handle_standard_args(QCA2 DEFAULT_MSG QCA2_LIBRARIES QCA2_INCLUDE_DIR)
+    mark_as_advanced(QCA2_INCLUDE_DIR QCA2_LIBRARIES)
+endif(QCA2_INCLUDE_DIR AND QCA2_LIBRARIES)
