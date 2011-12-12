@@ -10,8 +10,8 @@ macro(UPDATE_COMPILER_FLAGS target)
 		list(APPEND COMPILER_FLAGS "-Wall -Wextra -Wnon-virtual-dtor")
 	endif()
 
-        update_cxx_compiler_flag("-std=c++0x" CXX_0X)
-        update_cxx_compiler_flag("-fvisibility=hidden" HIDDEN_VISIBILITY)
+		update_cxx_compiler_flag("-std=c++0x" CXX_0X)
+		update_cxx_compiler_flag("-fvisibility=hidden" HIDDEN_VISIBILITY)
 
 	get_target_property(${target}_TYPE ${target} TYPE)
 	if (${target}_TYPE STREQUAL "STATIC_LIBRARY")
@@ -20,7 +20,10 @@ macro(UPDATE_COMPILER_FLAGS target)
 	set_target_properties(${target} PROPERTIES COMPILE_FLAGS "${COMPILER_FLAGS}")
 endmacro()
 
-macro(ADD_SIMPLE_LIBRARY target)
+macro(ADD_SIMPLE_LIBRARY target type)
+	if(NOT DEFINED type)
+		set(type STATIC)
+	endif()
 	message(STATUS "Searching ${target} source and headers")
 
 	# Search for source and headers in source directory
@@ -33,10 +36,10 @@ macro(ADD_SIMPLE_LIBRARY target)
 	endif()
 
 	qt4_wrap_ui(UIS_H ${FORMS})
-        moc_wrap_cpp(MOC_SRCS ${HDR})
+	moc_wrap_cpp(MOC_SRCS ${HDR})
 
 	# This project will generate library
-        add_library(${target} STATIC ${SRC} ${HDR} ${UIS_H} ${SOURCE_MM} ${MOC_SRCS})
+	add_library(${target} ${type} ${SRC} ${HDR} ${UIS_H} ${SOURCE_MM} ${MOC_SRCS})
 
 	include_directories(${CMAKE_CURRENT_BINARY_DIR}
 		.
@@ -48,9 +51,9 @@ macro(ADD_SIMPLE_LIBRARY target)
 	)
 
 	install(TARGETS ${target}
-                RUNTIME DESTINATION ${RLIBDIR}
-                LIBRARY DESTINATION ${LIBDIR}
-                ARCHIVE DESTINATION ${LIBDIR}
+				RUNTIME DESTINATION ${RLIBDIR}
+				LIBRARY DESTINATION ${LIBDIR}
+				ARCHIVE DESTINATION ${LIBDIR}
 	)
 endmacro()
 
@@ -60,16 +63,16 @@ macro(APPEND_TARGET_LOCATION target list)
 endmacro()
 
 macro(CHECK_DIRECTORY_EXIST directory exists)
-    if(EXISTS ${directory})
-        set(_exists FOUND)
-    else()
-        set(_exists NOT_FOUND)
-    endif()
-    set(exists ${_exists})
+	if(EXISTS ${directory})
+		set(_exists FOUND)
+	else()
+		set(_exists NOT_FOUND)
+	endif()
+	set(exists ${_exists})
 endmacro()
 
 macro(CHECK_QML_MODULE name exists)
-    check_directory_exist("${QT_IMPORTS_DIR}/${name}" _exists)
-    message(STATUS "Checking qml module ${name} - ${_exists}")
-    set(${exists} ${_exists})
+	check_directory_exist("${QT_IMPORTS_DIR}/${name}" _exists)
+	message(STATUS "Checking qml module ${name} - ${_exists}")
+	set(${exists} ${_exists})
 endmacro()
