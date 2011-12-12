@@ -26,20 +26,19 @@ macro(ADD_SIMPLE_LIBRARY target type)
 	endif()
 	message(STATUS "Searching ${target} source and headers")
 
-	# Search for source and headers in source directory
+        #Search for source and headers in source directory
 	file(GLOB_RECURSE SRC "${CMAKE_CURRENT_SOURCE_DIR}/*.cpp")
 	file(GLOB_RECURSE HDR "${CMAKE_CURRENT_SOURCE_DIR}/*.h")
 	file(GLOB_RECURSE FORMS "${CMAKE_CURRENT_SOURCE_DIR}/*.ui")
-	if (apple)
-		file(GLOB_RECURSE SOURCES_MM RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}/" "${CMAKE_CURRENT_SOURCE_DIR}/*.mm" )
-		list(APPEND SOURCE SOURCE_MM} )
+        if(APPLE)
+                file(GLOB_RECURSE MM RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}/" "${CMAKE_CURRENT_SOURCE_DIR}/*.mm" )
 	endif()
 
 	qt4_wrap_ui(UIS_H ${FORMS})
 	moc_wrap_cpp(MOC_SRCS ${HDR})
 
 	# This project will generate library
-	add_library(${target} ${type} ${SRC} ${HDR} ${UIS_H} ${SOURCE_MM} ${MOC_SRCS})
+        add_library(${target} ${type} ${SRC} ${MM} ${HDR} ${UIS_H} ${MOC_SRCS})
 
 	include_directories(${CMAKE_CURRENT_BINARY_DIR}
 		.
