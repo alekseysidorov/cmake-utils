@@ -1,8 +1,8 @@
 macro(MOC_WRAP_CPP outfiles)
-	if(CMAKE_VERSION VERSION_GREATER "2.8.6")
+        if(CMAKE_VERSION VERSION_GREATER "2.8.4")
 		set(CMAKE_AUTOMOC true)
-	else()
-		# get include dirs
+        else()
+                # get include dirs
 		qt4_get_moc_flags(moc_flags)
 		qt4_extract_options(moc_files moc_options ${ARGN})
 
