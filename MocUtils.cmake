@@ -1,5 +1,5 @@
 macro(MOC_WRAP_CPP outfiles)
-        if(CMAKE_VERSION VERSION_GREATER "2.8.4" AND NOT APPLE)
+        if(CMAKE_VERSION VERSION_GREATER "2.8.6" AND NOT APPLE)
 		set(CMAKE_AUTOMOC true)
         else()
                 # get include dirs
