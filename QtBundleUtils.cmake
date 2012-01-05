@@ -66,7 +66,7 @@ endmacro()
 
 macro(DEFINE_BUNDLE_PATHS _name)
 	if(WIN32)
-                set(BUNDLE_NAME ${_name}.exe)
+		set(BUNDLE_NAME ${_name}.exe)
 		set(BINDIR bin)
                 set(BUNDLE_PATH "\${CMAKE_INSTALL_PREFIX}/${BINDIR}/${BUNDLE_NAME}")
 		set(LIBDIR lib${LIB_SUFFIX})
