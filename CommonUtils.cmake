@@ -99,18 +99,28 @@ macro(GENERATE_PUBLIC_HEADER header name)
 endmacro()
 
 macro(DEPLOY_QML_FOLDER sourceDir destinationDir)
+    get_filename_component(_basename ${sourceDir} NAME_WE)
+    file(GLOB_RECURSE _files "${sourceDir}/*.*")
+    message(STATUS "deploy qml folder: ${sourceDir}")
+    add_custom_target(qml_${_basename} ALL
+        SOURCES ${_files}
+    )
+
     file(GLOB _files "${sourceDir}/*")
     foreach(_file ${_files})
         if(IS_DIRECTORY ${_file})
             install(DIRECTORY ${_file} DESTINATION  ${destinationDir})
+            get_filename_component(_name ${_file} NAME_WE)
+            add_custom_command(TARGET qml_${_basename}
+                COMMAND cmake -E copy_directory ${_file} "${CMAKE_CURRENT_BINARY_DIR}/${_name}"
+            )
         else()
             install(FILES ${_file} DESTINATION  ${destinationDir})
+            add_custom_command(TARGET qml_${_basename}
+                COMMAND cmake -E copy_if_different ${_file} ${CMAKE_CURRENT_BINARY_DIR}
+            )
         endif()
     endforeach()
-    get_filename_component(_basename ${sourceDir} NAME_WE)
-    file(GLOB_RECURSE _files "${sourceDir}/*.*")
-    add_custom_target(qml_${basename} ALL ${CMAKE_COMMAND} -E echo "" SOURCES ${_files})
-    message(STATUS "deploy qml folder: ${sourceDir}")
 endmacro()
 
 macro(ENABLE_QML_DEBUG_SUPPORT target)
