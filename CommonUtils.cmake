@@ -4,20 +4,19 @@ include(MocUtils)
 
 macro(UPDATE_COMPILER_FLAGS target)    
     if(MSVC)
-        list(APPEND COMPILER_FLAGS "/W3")
+        update_cxx_compiler_flag("/W3" W3)
+    update_cxx_compiler_flag("/WX" WX)
     else()
-        list(APPEND COMPILER_FLAGS "-Wall -Wextra ")
+        update_cxx_compiler_flag("-Wall" WALL)
+        update_cxx_compiler_flag("-Wextra" WEXTRA)
+        update_cxx_compiler_flag("-Wnon-virtual-dtor" WDTOR)
+        update_cxx_compiler_flag("-Werror" WERROR)
     endif()
 
     update_cxx_compiler_flag("-std=c++0x" CXX_11)
     update_cxx_compiler_flag("-fvisibility=hidden" HIDDEN_VISIBILITY)
-    update_cxx_compiler_flag("-Wall" WALL)
-    update_cxx_compiler_flag("-Wextra" WEXTRA)
-    update_cxx_compiler_flag("-Wnon-virtual-dtor" WDTOR)
-    update_cxx_compiler_flag("-Werror" WERROR)
 
-    update_cxx_compiler_flag("/W3" W3)
-    update_cxx_compiler_flag("/Wx" WX)
+    #
 
     get_target_property(${target}_TYPE ${target} TYPE)
     if (${target}_TYPE STREQUAL "STATIC_LIBRARY")
