@@ -103,23 +103,22 @@ macro(DEPLOY_QML_FOLDER sourceDir destinationDir)
     message(STATUS "deploy qml folder: ${sourceDir}")
     add_custom_target(qml_${_basename} ALL
         SOURCES ${_files}
-    )
-
-    file(GLOB _files "${sourceDir}/*")
-    foreach(_file ${_files})
+	)
+	file(GLOB _files "${sourceDir}/*")
+	foreach(_file ${_files})
         if(IS_DIRECTORY ${_file})
             install(DIRECTORY ${_file} DESTINATION  ${destinationDir})
             get_filename_component(_name ${_file} NAME_WE)
             add_custom_command(TARGET qml_${_basename}
-                COMMAND cmake -E copy_directory ${_file} "${CMAKE_CURRENT_BINARY_DIR}/${_name}"
+				COMMAND ${CMAKE_COMMAND} -E copy_directory ${_file} "${CMAKE_BINARY_DIR}/${_name}"
             )
         else()
             install(FILES ${_file} DESTINATION  ${destinationDir})
             add_custom_command(TARGET qml_${_basename}
-                COMMAND cmake -E copy_if_different ${_file} ${CMAKE_CURRENT_BINARY_DIR}
+				COMMAND ${CMAKE_COMMAND} -E copy_if_different ${_file} ${CMAKE_BINARY_DIR}
             )
         endif()
-    endforeach()
+	endforeach()
 endmacro()
 
 macro(ENABLE_QML_DEBUG_SUPPORT target)
