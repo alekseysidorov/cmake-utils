@@ -8,6 +8,9 @@ if(APPLE)
 	if(QT_3D_LIBRARIES)
 		message( STATUS "Found Qt3D framework: ${QT_3D_LIBRARIES}")
 		set(QT_3D_FOUND true)
+		list(APPEND QT_LIBRARIES
+			${QT_3D_LIBRARIES}
+		)
 	else()
 		message( STATUS "Could NOT find Qt3D")
 	endif()
@@ -22,8 +25,14 @@ else()
 
 	if(QT_3D_LIBRARIES AND QT_3D_INCLUDE_DIR)
 		message( STATUS "Found Qt3D: ${QT_3D_LIBRARIES}")
-		set(QT_3D_FOUND true )
+		set(QT_3D_FOUND true)
+		list(APPEND QT_LIBRARIES
+			${QT_3D_LIBRARIES}
+		)
+		list(APPEND QT_INCLUDES
+			${QT_3D_INCLUDE_DIR}
+		)
 	else(QT_3D_LIBRARIES AND QT_3D_INCLUDE_DIR)
-		message( STATUS "Could NOT find Qt3D")
+		message(STATUS "Could NOT find Qt3D")
 	endif(QT_3D_LIBRARIES AND QT_3D_INCLUDE_DIR)
 endif()

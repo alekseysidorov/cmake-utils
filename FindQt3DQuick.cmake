@@ -10,6 +10,9 @@ if(APPLE)
 	if(QT_3DQUICK_LIBRARIES)
 		message(STATUS "Found Qt3DQuick framework: ${QT_3DQUICK_LIBRARIES}")
 		set(QT_3DQUICK_FOUND true)
+		list(APPEND QT_LIBRARIES
+			${QT_3DQUICK_LIBRARIES}
+		)
 	else()
 		message(STATUS "Could NOT find Qt3DQuick")
 	endif()
@@ -25,6 +28,12 @@ else()
 	if(QT_3DQUICK_LIBRARIES AND QT_3DQUICK_INCLUDE_DIR)
 		message(STATUS "Found Qt3DQuick: ${QT_3DQUICK_LIBRARIES}")
 		set(QT_3DQUICK_FOUND true)
+		list(APPEND QT_LIBRARIES
+			${QT_3DQUICK_LIBRARIES}
+		)
+		list(APPEND QT_INCLUDES
+			${QT_3DQUICK_INCLUDE_DIR}
+		)
 	else()
 		message( STATUS "Could NOT find Qt3DQuick")
 	endif()
