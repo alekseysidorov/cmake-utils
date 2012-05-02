@@ -2,6 +2,44 @@ include(CompilerUtils)
 include(QtBundleUtils)
 include(MocUtils)
 
+MACRO(LIST_CONTAINS var value)
+  SET(${var})
+  FOREACH (value2 ${ARGN})
+    IF (${value} STREQUAL ${value2})
+      SET(${var} TRUE)
+    ENDIF (${value} STREQUAL ${value2})
+  ENDFOREACH (value2)
+ENDMACRO(LIST_CONTAINS)
+
+MACRO(PARSE_ARGUMENTS prefix arg_names option_names)
+  SET(DEFAULT_ARGS)
+  FOREACH(arg_name ${arg_names})
+    SET(${prefix}_${arg_name})
+  ENDFOREACH(arg_name)
+  FOREACH(option ${option_names})
+    SET(${prefix}_${option} FALSE)
+  ENDFOREACH(option)
+
+  SET(current_arg_name DEFAULT_ARGS)
+  SET(current_arg_list)
+  FOREACH(arg ${ARGN})
+    LIST_CONTAINS(is_arg_name ${arg} ${arg_names})
+    IF (is_arg_name)
+      SET(${prefix}_${current_arg_name} ${current_arg_list})
+      SET(current_arg_name ${arg})
+      SET(current_arg_list)
+    ELSE (is_arg_name)
+      LIST_CONTAINS(is_option ${arg} ${option_names})
+      IF (is_option)
+        SET(${prefix}_${arg} TRUE)
+      ELSE (is_option)
+        SET(current_arg_list ${current_arg_list} ${arg})
+      ENDIF (is_option)
+    ENDIF (is_arg_name)
+  ENDFOREACH(arg)
+  SET(${prefix}_${current_arg_name} ${current_arg_list})
+ENDMACRO(PARSE_ARGUMENTS)
+
 macro(UPDATE_COMPILER_FLAGS target)    
     if(MSVC)
         update_cxx_compiler_flag("/W3" W3)
@@ -106,14 +144,27 @@ macro(GENERATE_PUBLIC_HEADER header name)
 endmacro()
 
 macro(ADD_CUSTOM_DIRECTORY sourceDir)
+    parse_arguments(DIR
+        ""
+        "DESCRIPTION"
+        ${ARGN}
+    )
+
     get_filename_component(_basename ${sourceDir} NAME_WE)
     file(GLOB_RECURSE _files "${sourceDir}/*.*")
     add_custom_target(dir_${_basename} ALL
         SOURCES ${_files}
     )
+    source_group(${DIR_DESCRIPTION} FILES ${_files})
 endmacro()
 
-macro(DEPLOY_QML_FOLDER sourceDir destinationDir)
+macro(DEPLOY_QML_FOLDER sourceDir)
+    parse_arguments(FOLDER
+        ""
+        "DESCRIPTION;DESTINATION"
+        ${ARGN}
+    )
+
     get_filename_component(_basename ${sourceDir} NAME_WE)
     file(GLOB_RECURSE _files "${sourceDir}/*.*")
     message(STATUS "deploy qml folder: ${sourceDir}")
@@ -123,18 +174,19 @@ macro(DEPLOY_QML_FOLDER sourceDir destinationDir)
     file(GLOB _files "${sourceDir}/*")
     foreach(_file ${_files})
         if(IS_DIRECTORY ${_file})
-            install(DIRECTORY ${_file} DESTINATION  ${destinationDir})
+            install(DIRECTORY ${_file} DESTINATION  ${FOLDER_DESTINATION})
             get_filename_component(_name ${_file} NAME_WE)
             add_custom_command(TARGET qml_${_basename}
                                 COMMAND ${CMAKE_COMMAND} -E copy_directory ${_file} "${CMAKE_BINARY_DIR}/${_name}"
             )
         else()
-            install(FILES ${_file} DESTINATION  ${destinationDir})
+            install(FILES ${_file} DESTINATION  ${FOLDER_DESTINATION})
             add_custom_command(TARGET qml_${_basename}
                                 COMMAND ${CMAKE_COMMAND} -E copy_if_different ${_file} ${CMAKE_BINARY_DIR}
             )
         endif()
     endforeach()
+    source_group(${FOLDER_DESCRIPTION} FILES ${_files})
 endmacro()
 
 macro(ENABLE_QML_DEBUG_SUPPORT target)
