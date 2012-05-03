@@ -145,8 +145,8 @@ endmacro()
 
 macro(ADD_CUSTOM_DIRECTORY sourceDir)
     parse_arguments(DIR
-        ""
         "DESCRIPTION"
+        ""
         ${ARGN}
     )
 
@@ -160,8 +160,8 @@ endmacro()
 
 macro(DEPLOY_QML_FOLDER sourceDir)
     parse_arguments(FOLDER
-        ""
         "DESCRIPTION;DESTINATION"
+        ""
         ${ARGN}
     )
 
