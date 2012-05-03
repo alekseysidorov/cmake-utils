@@ -61,10 +61,18 @@ macro(UPDATE_COMPILER_FLAGS target)
     set_target_properties(${target} PROPERTIES COMPILE_FLAGS "${COMPILER_FLAGS}")
 endmacro()
 
-macro(ADD_SIMPLE_LIBRARY target type)
-    if(NOT DEFINED type)
+macro(ADD_SIMPLE_LIBRARY target)
+    parse_arguments(LIBRARY
+        "LIBRARIES;INCLUDES;DEFINES"
+        "STATIC"
+        ${ARGN}
+    )
+    if(LIBRARY_STATIC)
         set(type STATIC)
+    else()
+        set(type SHARED)
     endif()
+
     message(STATUS "Searching ${target} source and headers")
 
     #Search for source and headers in source directory
@@ -82,9 +90,12 @@ macro(ADD_SIMPLE_LIBRARY target type)
 
     # This project will generate library
     add_library(${target} ${type} ${SRC} ${MM} ${HDR} ${UIS_H} ${MOC_SRCS} ${QRC_SOURCES})
+    foreach(_define ${LIBRARY_DEFINES})
+        add_definitions(-D${_define})
+    endforeach()
 
     include_directories(${CMAKE_CURRENT_BINARY_DIR}
-
+        .
     )
     update_compiler_flags(${target})
 
