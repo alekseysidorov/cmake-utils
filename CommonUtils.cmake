@@ -110,14 +110,21 @@ macro(ADD_SIMPLE_LIBRARY target)
     )
 endmacro()
 
-macro(ADD_SIMPLE_QT_TEST target libraries)
+macro(ADD_SIMPLE_QT_TEST target)
+    parse_arguments(TEST
+        "LIBRARIES;RESOURCES"
+        ""
+        ${ARGN}
+    )
     set(${target}_SRCS ${target}.cpp)
-    set(TEST_LIBRARIES ${libraries} ${QT_QTTEST_LIBRARY} ${QT_LIBRARIES})
+    qt4_add_resources(RCC ${TEST_RESOURCES})
+    list(APPEND ${target}_SRCS ${RCC})
     include_directories(${CMAKE_CURRENT_BINARY_DIR})
     add_executable(${target} ${${target}_SRCS})
-    target_link_libraries(${target} ${TEST_LIBRARIES})
+    target_link_libraries(${target} ${TEST_LIBRARIES} ${QT_QTTEST_LIBRARY} ${QT_LIBRARIES})
 	update_compiler_flags(${target})
     add_test(NAME ${target} COMMAND ${target})
+    message(STATUS "Added simple test: ${target}")
 endmacro()
 
 macro(APPEND_TARGET_LOCATION target list)
@@ -169,7 +176,7 @@ macro(ADD_CUSTOM_DIRECTORY sourceDir)
     source_group(${DIR_DESCRIPTION} FILES ${_files})
 endmacro()
 
-macro(DEPLOY_QML_FOLDER sourceDir)
+macro(DEPLOY_FOLDER sourceDir)
     parse_arguments(FOLDER
         "DESCRIPTION;DESTINATION"
         ""
