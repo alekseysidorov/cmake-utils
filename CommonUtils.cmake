@@ -52,6 +52,8 @@ macro(UPDATE_COMPILER_FLAGS target)
     endif()
 
     update_cxx_compiler_flag("-std=c++0x" CXX_11)
+    #update_cxx_compiler_flag("-stdlib=libc++" STD_LIBCXX)
+
     get_target_property(${target}_TYPE ${target} TYPE)
     if (${target}_TYPE STREQUAL "STATIC_LIBRARY")
         update_cxx_compiler_flag("-fpic" PIC)
