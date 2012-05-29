@@ -11,6 +11,10 @@ if(APPLE)
 		list(APPEND QT_LIBRARIES
 			${QT_3D_LIBRARIES}
 		)
+		set(QT_3D_INCLUDE_DIR "${QT_3D_LIBRARIES}/Headers")
+		list(APPEND QT_INCLUDES
+			${QT_3D_INCLUDE_DIR}
+		)
 	else()
 		message( STATUS "Could NOT find Qt3D")
 	endif()

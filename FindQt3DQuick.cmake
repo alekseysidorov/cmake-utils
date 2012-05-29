@@ -13,6 +13,10 @@ if(APPLE)
 		list(APPEND QT_LIBRARIES
 			${QT_3DQUICK_LIBRARIES}
 		)
+		set(QT_3DQUICK_INCLUDE_DIR "${QT_3DQUICK_LIBRARIES}/Headers")
+		list(APPEND QT_INCLUDES
+			${QT_3DQUICK_INCLUDE_DIR}
+		)
 	else()
 		message(STATUS "Could NOT find Qt3DQuick")
 	endif()
