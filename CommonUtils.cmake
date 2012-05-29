@@ -63,20 +63,7 @@ macro(UPDATE_COMPILER_FLAGS target)
     set_target_properties(${target} PROPERTIES COMPILE_FLAGS "${COMPILER_FLAGS}")
 endmacro()
 
-macro(ADD_SIMPLE_LIBRARY target)
-    parse_arguments(LIBRARY
-        "LIBRARIES;INCLUDES;DEFINES"
-        "STATIC"
-        ${ARGN}
-    )
-    if(LIBRARY_STATIC)
-        set(type STATIC)
-    else()
-        set(type SHARED)
-    endif()
-
-    message(STATUS "Searching ${target} source and headers")
-
+function(__GET_SOURCES name)
     #Search for source and headers in source directory
     file(GLOB_RECURSE SRC "${CMAKE_CURRENT_SOURCE_DIR}/*.cpp")
     file(GLOB_RECURSE HDR "${CMAKE_CURRENT_SOURCE_DIR}/*.h")
@@ -89,27 +76,94 @@ macro(ADD_SIMPLE_LIBRARY target)
     qt4_wrap_ui(UIS_H ${FORMS})
     moc_wrap_cpp(MOC_SRCS ${HDR})
     qt4_add_resources(QRC_SOURCES ${QRC})
+    list(APPEND sources
+        ${SRC}
+        ${MM}
+        ${HDR}
+        ${UIS_H}
+        ${MOC_SRCS}
+        ${QRC_SOURCES}
+    )
+    set(${name} ${sources} PARENT_SCOPE)
+endfunction()
 
+macro(ADD_SIMPLE_LIBRARY target)
+    parse_arguments(LIBRARY
+        "LIBRARIES;INCLUDES;DEFINES"
+        "STATIC;INTERNAL"
+        ${ARGN}
+    )
+    if(LIBRARY_STATIC)
+        set(type STATIC)
+    else()
+        set(type SHARED)
+    endif()
+
+    message(STATUS "Searching ${target} source and headers")
+    __get_sources(SOURCES)
     # This project will generate library
-    add_library(${target} ${type} ${SRC} ${MM} ${HDR} ${UIS_H} ${MOC_SRCS} ${QRC_SOURCES})
+    add_library(${target} ${type} ${SOURCES})
     foreach(_define ${LIBRARY_DEFINES})
         add_definitions(-D${_define})
     endforeach()
 
     include_directories(${CMAKE_CURRENT_BINARY_DIR}
         .
+        ${LIBRARY_INCLUDES}
     )
     update_compiler_flags(${target})
 
     target_link_libraries(${target}
         ${QT_LIBRARIES}
+        ${LIBRARY_LIBRARIES}
     )
 
-    install(TARGETS ${target}
-        RUNTIME DESTINATION ${RLIBDIR}
-        LIBRARY DESTINATION ${LIBDIR}
-        ARCHIVE DESTINATION ${LIBDIR}
+    if(NOT INTERNAL)
+        install(TARGETS ${target}
+            RUNTIME DESTINATION ${RLIBDIR}
+            LIBRARY DESTINATION ${LIBDIR}
+            ARCHIVE DESTINATION ${LIBDIR}
+        )
+    endif()
+endmacro()
+
+macro(ADD_SIMPLE_EXECUTABLE target)
+    parse_arguments(EXECUTABLE
+        "LIBRARIES;INCLUDES;DEFINES"
+        "INTERNAL;GUI"
+        ${ARGN}
     )
+
+    if(EXECUTABLE_GUI)
+        set(type WIN32)
+    else()
+        set(type "")
+    endif()
+    message(STATUS "Searching ${target} source and headers")
+    __get_sources(SOURCES)
+    # This project will generate library
+    add_executable(${target} ${type} ${SOURCES})
+    foreach(_define ${EXECUTABLE_DEFINES})
+        add_definitions(-D${_define})
+    endforeach()
+
+    include_directories(${CMAKE_CURRENT_BINARY_DIR}
+        .
+        ${EXECUTABLE_INCLUDES}
+    )
+    update_compiler_flags(${target})
+
+    target_link_libraries(${target}
+        ${QT_LIBRARIES}
+        ${EXECUTABLE_LIBRARIES}
+    )
+
+    if(NOT INTERNAL)
+        install(TARGETS ${target}
+            RUNTIME DESTINATION ${BINDIR}
+            BUNDLE DESTINATION .
+        )
+    endif()
 endmacro()
 
 macro(ADD_SIMPLE_QT_TEST target)
@@ -121,7 +175,7 @@ macro(ADD_SIMPLE_QT_TEST target)
     set(${target}_SRCS ${target}.cpp)
     qt4_add_resources(RCC ${TEST_RESOURCES})
     list(APPEND ${target}_SRCS ${RCC})
-	include_directories(${CMAKE_CURRENT_BINARY_DIR} ${QT_QTTEST_INCLUDE_DIR})
+    include_directories(${CMAKE_CURRENT_BINARY_DIR} ${QT_QTTEST_INCLUDE_DIR})
     add_executable(${target} ${${target}_SRCS})
     target_link_libraries(${target} ${TEST_LIBRARIES} ${QT_QTTEST_LIBRARY} ${QT_LIBRARIES})
     update_compiler_flags(${target})
