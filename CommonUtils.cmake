@@ -118,7 +118,7 @@ macro(ADD_SIMPLE_LIBRARY target)
         ${LIBRARY_LIBRARIES}
     )
 
-    if(NOT INTERNAL)
+    if(NOT LIBRARY_INTERNAL)
         install(TARGETS ${target}
             RUNTIME DESTINATION ${RLIBDIR}
             LIBRARY DESTINATION ${LIBDIR}
@@ -162,7 +162,7 @@ macro(ADD_SIMPLE_EXECUTABLE target)
         ${EXECUTABLE_LIBRARIES}
     )
 
-    if(NOT INTERNAL)
+    if(NOT EXECUTABLE_INTERNAL)
         install(TARGETS ${target}
             RUNTIME DESTINATION ${BINDIR}
             BUNDLE DESTINATION .
