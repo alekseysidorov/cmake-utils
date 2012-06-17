@@ -40,18 +40,29 @@ MACRO(PARSE_ARGUMENTS prefix arg_names option_names)
   SET(${prefix}_${current_arg_name} ${current_arg_list})
 ENDMACRO(PARSE_ARGUMENTS)
 
-macro(UPDATE_COMPILER_FLAGS target)    
-    if(MSVC)
-        update_cxx_compiler_flag("/W3" W3)
-        update_cxx_compiler_flag("/WX" WX)
-    else()
-        update_cxx_compiler_flag("-Wall" WALL)
-        update_cxx_compiler_flag("-Wextra" WEXTRA)
-        update_cxx_compiler_flag("-Wnon-virtual-dtor" WDTOR)
-        update_cxx_compiler_flag("-Werror" WERROR)
-    endif()
+macro(UPDATE_COMPILER_FLAGS target)
+    parse_arguments(FLAGS
+        ""
+        "DEVELOPER;CXX11"
+        ${ARGN}
+    )
 
-    update_cxx_compiler_flag("-std=c++0x" CXX_11)
+	if(FLAGS_DEVELOPER)
+		if(MSVC)
+			update_cxx_compiler_flag("/W3" W3)
+			update_cxx_compiler_flag("/WX" WX)
+		else()
+			update_cxx_compiler_flag("-Wall" WALL)
+			update_cxx_compiler_flag("-Wextra" WEXTRA)
+			update_cxx_compiler_flag("-Wnon-virtual-dtor" WDTOR)
+			update_cxx_compiler_flag("-Werror" WERROR)
+		endif()
+	endif()
+
+	if(FLAGS_CXX11)
+		update_cxx_compiler_flag("-std=c++0x" CXX_11)
+		#add check for c++11 support
+	endif()
     #update_cxx_compiler_flag("-stdlib=libc++" STD_LIBCXX)
 
     get_target_property(${target}_TYPE ${target} TYPE)
@@ -89,8 +100,8 @@ endfunction()
 
 macro(ADD_SIMPLE_LIBRARY target)
     parse_arguments(LIBRARY
-        "LIBRARIES;INCLUDES;DEFINES"
-        "STATIC;INTERNAL"
+        "LIBRARIES;INCLUDES;DEFINES;VERSION;SOVERSION;DEFINE_SYMBOL"
+        "STATIC;INTERNAL;DEVELOPER;CXX11"
         ${ARGN}
     )
     if(LIBRARY_STATIC)
@@ -98,6 +109,13 @@ macro(ADD_SIMPLE_LIBRARY target)
     else()
         set(type SHARED)
     endif()
+	
+	if(LIBRARY_DEVELOPER)
+		list(APPEND opts DEVELOPER)
+	endif()
+	if(LIBRARY_CXX11)
+		list(APPEND opts CXX11)
+	endif()
 
     message(STATUS "Searching ${target} source and headers")
     __get_sources(SOURCES)
@@ -111,7 +129,12 @@ macro(ADD_SIMPLE_LIBRARY target)
         .
         ${LIBRARY_INCLUDES}
     )
-    update_compiler_flags(${target})
+    update_compiler_flags(${target} ${opts})
+	set_target_properties(${target} PROPERTIES
+		VERSION ${LIBRARY_VERSION}
+		SOVERSION ${LIBRARY_SOVERSION}
+		DEFINE_SYMBOL ${LIBRARY_DEFINE_SYMBOL}
+	)
 
     target_link_libraries(${target}
         ${QT_LIBRARIES}
@@ -124,6 +147,13 @@ macro(ADD_SIMPLE_LIBRARY target)
             LIBRARY DESTINATION ${LIBDIR}
             ARCHIVE DESTINATION ${LIBDIR}
         )
+		set(INCDIR include/${target})
+		#TODO add framework creation ability
+		file(GLOB_RECURSE PUBLIC_HEADERS "${CMAKE_CURRENT_SOURCE_DIR}/*[^p].h")
+		file(GLOB_RECURSE PRIVATE_HEADERS "${CMAKE_CURRENT_SOURCE_DIR}/*_p.h")
+		message(${PRIVATE_HEADERS})
+		install(FILES ${PUBLIC_HEADERS} DESTINATION ${INCDIR})
+		install(FILES ${PRIVATE_HEADERS} DESTINATION ${INCDIR}/private/${LIBRARY_VERSION})
     endif()
 endmacro()
 
