@@ -111,10 +111,10 @@ macro(ADD_SIMPLE_LIBRARY target)
     endif()
 	
     if(LIBRARY_DEVELOPER)
-            list(APPEND opts DEVELOPER)
+        list(APPEND opts DEVELOPER)
     endif()
     if(LIBRARY_CXX11)
-            list(APPEND opts CXX11)
+        list(APPEND opts CXX11)
     endif()
 
     message(STATUS "Searching ${target} source and headers")
@@ -130,11 +130,11 @@ macro(ADD_SIMPLE_LIBRARY target)
         ${LIBRARY_INCLUDES}
     )
     update_compiler_flags(${target} ${opts})
-	set_target_properties(${target} PROPERTIES
-		VERSION ${LIBRARY_VERSION}
-		SOVERSION ${LIBRARY_SOVERSION}
-		DEFINE_SYMBOL ${LIBRARY_DEFINE_SYMBOL}
-	)
+    set_target_properties(${target} PROPERTIES
+            VERSION ${LIBRARY_VERSION}
+            SOVERSION ${LIBRARY_SOVERSION}
+            DEFINE_SYMBOL ${LIBRARY_DEFINE_SYMBOL}
+    )
 
     target_link_libraries(${target}
         ${QT_LIBRARIES}
@@ -160,7 +160,7 @@ endmacro()
 macro(ADD_SIMPLE_EXECUTABLE target)
     parse_arguments(EXECUTABLE
         "LIBRARIES;INCLUDES;DEFINES"
-        "INTERNAL;GUI"
+        "INTERNAL;GUI;CXX11"
         ${ARGN}
     )
 
@@ -185,7 +185,12 @@ macro(ADD_SIMPLE_EXECUTABLE target)
         .
         ${EXECUTABLE_INCLUDES}
     )
-    update_compiler_flags(${target})
+
+    if(EXECUTABLE_CXX11)
+        list(APPEND opts CXX11)
+    endif()
+
+    update_compiler_flags(${target} ${opts})
 
     target_link_libraries(${target}
         ${QT_LIBRARIES}
@@ -203,7 +208,7 @@ endmacro()
 macro(ADD_SIMPLE_QT_TEST target)
     parse_arguments(TEST
         "LIBRARIES;RESOURCES"
-        ""
+        "CXX11"
         ${ARGN}
     )
     set(${target}_SRCS ${target}.cpp)
@@ -212,7 +217,10 @@ macro(ADD_SIMPLE_QT_TEST target)
     include_directories(${CMAKE_CURRENT_BINARY_DIR} ${QT_QTTEST_INCLUDE_DIR})
     add_executable(${target} ${${target}_SRCS})
     target_link_libraries(${target} ${TEST_LIBRARIES} ${QT_QTTEST_LIBRARY} ${QT_LIBRARIES})
-    update_compiler_flags(${target})
+    if(TEST_CXX11)
+        list(APPEND opts CXX11)
+    endif()
+    update_compiler_flags(${target} ${opts})
     add_test(NAME ${target} COMMAND ${target})
     message(STATUS "Added simple test: ${target} LIBRARIES: ${TEST_LIBRARIES}")
 endmacro()
