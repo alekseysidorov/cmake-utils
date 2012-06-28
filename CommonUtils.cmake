@@ -124,9 +124,10 @@ macro(ADD_SIMPLE_LIBRARY target)
     foreach(_define ${LIBRARY_DEFINES})
         add_definitions(-D${_define})
     endforeach()
+    set(LIBRARY_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR})
 
     include_directories(${CMAKE_CURRENT_BINARY_DIR}
-        .
+        ${LIBRARY_SOURCE_DIR}
         ${LIBRARY_INCLUDES}
     )
     update_compiler_flags(${target} ${opts})
