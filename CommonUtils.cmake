@@ -76,7 +76,8 @@ endmacro()
 
 function(__GET_SOURCES name)
     #Search for source and headers in source directory
-    file(GLOB_RECURSE SRC "${CMAKE_CURRENT_SOURCE_DIR}/*.cpp")
+    file(GLOB_RECURSE CXX "${CMAKE_CURRENT_SOURCE_DIR}/*.cpp")
+    file(GLOB_RECURSE CC "${CMAKE_CURRENT_SOURCE_DIR}/*.c")
     file(GLOB_RECURSE HDR "${CMAKE_CURRENT_SOURCE_DIR}/*.h")
     file(GLOB_RECURSE FORMS "${CMAKE_CURRENT_SOURCE_DIR}/*.ui")
     file(GLOB_RECURSE QRC "${CMAKE_CURRENT_SOURCE_DIR}/*.qrc")
@@ -88,7 +89,8 @@ function(__GET_SOURCES name)
     moc_wrap_cpp(MOC_SRCS ${HDR})
     qt4_add_resources(QRC_SOURCES ${QRC})
     list(APPEND sources
-        ${SRC}
+        ${CXX}
+        ${CC}
         ${MM}
         ${HDR}
         ${UIS_H}
