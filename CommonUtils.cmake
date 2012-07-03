@@ -83,6 +83,7 @@ function(__GET_SOURCES name)
         set(sourceDir ${CMAKE_CURRENT_SOURCE_DIR})
     endif()
     #Search for source and headers in source directory
+    file(GLOB_RECURSE HDR "${sourceDir}/*.h")
     file(GLOB_RECURSE CXX "${sourceDir}/*.cpp")
     file(GLOB_RECURSE CC "${sourceDir}/*.c")
     file(GLOB_RECURSE FORMS "${sourceDir}/*.ui")
