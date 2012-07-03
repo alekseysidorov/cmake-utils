@@ -49,39 +49,46 @@ macro(UPDATE_COMPILER_FLAGS target)
 
     if(FLAGS_DEVELOPER)
         if(MSVC)
-			update_cxx_compiler_flag(${target} "/W3" W3)
-			update_cxx_compiler_flag(${target} "/WX" WX)
+            update_cxx_compiler_flag(${target} "/W3" W3)
+            update_cxx_compiler_flag(${target} "/WX" WX)
         else()
-			update_cxx_compiler_flag(${target} "-Wall" WALL)
-			update_cxx_compiler_flag(${target} "-Wextra" WEXTRA)
-			update_cxx_compiler_flag(${target} "-Wnon-virtual-dtor" WDTOR)
-			update_cxx_compiler_flag(${target} "-Werror" WERROR)
+            update_cxx_compiler_flag(${target} "-Wall" WALL)
+            update_cxx_compiler_flag(${target} "-Wextra" WEXTRA)
+            update_cxx_compiler_flag(${target} "-Wnon-virtual-dtor" WDTOR)
+            update_cxx_compiler_flag(${target} "-Werror" WERROR)
         endif()
     endif()
 
     if(FLAGS_CXX11)
-		update_cxx_compiler_flag(${target} "-std=c++0x" CXX_11)
+        update_cxx_compiler_flag(${target} "-std=c++0x" CXX_11)
+        #update_cxx_compiler_flag("-stdlib=libc++" STD_LIBCXX)
         #add check for c++11 support
     endif()
-    #update_cxx_compiler_flag("-stdlib=libc++" STD_LIBCXX)
 
     get_target_property(${target}_TYPE ${target} TYPE)
 	if(${target}_TYPE STREQUAL "STATIC_LIBRARY")
-		update_cxx_compiler_flag(${target} "-fpic" PIC)
+            update_cxx_compiler_flag(${target} "-fpic" PIC)
 	elseif(${target}_TYPE STREQUAL "SHARED_LIBRARY")
-		update_cxx_compiler_flag(${target} "-fvisibility=hidden" HIDDEN_VISIBILITY)
+            update_cxx_compiler_flag(${target} "-fvisibility=hidden" HIDDEN_VISIBILITY)
     endif()
     set_target_properties(${target} PROPERTIES COMPILE_FLAGS "${COMPILER_FLAGS}")
 endmacro()
 
 function(__GET_SOURCES name)
+    list(LENGTH ARGV _len)
+    if(_len GREATER 1)
+        list(GET ARGV 1 sourceDir)
+    endif()
+    if(NOT DEFINED sourceDir)
+        set(sourceDir ${CMAKE_CURRENT_SOURCE_DIR})
+    endif()
     #Search for source and headers in source directory
-    file(GLOB_RECURSE SRC "${CMAKE_CURRENT_SOURCE_DIR}/*.cpp")
-    file(GLOB_RECURSE HDR "${CMAKE_CURRENT_SOURCE_DIR}/*.h")
-    file(GLOB_RECURSE FORMS "${CMAKE_CURRENT_SOURCE_DIR}/*.ui")
-    file(GLOB_RECURSE QRC "${CMAKE_CURRENT_SOURCE_DIR}/*.qrc")
+    file(GLOB_RECURSE SRC "${sourceDir}/*.cpp")
+    file(GLOB_RECURSE HDR "${sourceDir}/*.h")
+    file(GLOB_RECURSE FORMS "${sourceDir}/*.ui")
+    file(GLOB_RECURSE QRC "${sourceDir}/*.qrc")
     if(APPLE)
-        file(GLOB_RECURSE MM "${CMAKE_CURRENT_SOURCE_DIR}/*.mm")
+        file(GLOB_RECURSE MM "${sourceDir}/*.mm")
     endif()
 
     qt4_wrap_ui(UIS_H ${FORMS})
@@ -117,7 +124,6 @@ macro(ADD_SIMPLE_LIBRARY target)
         list(APPEND opts CXX11)
     endif()
 
-    message(STATUS "Searching ${target} source and headers")
     __get_sources(SOURCES)
     # This project will generate library
     add_library(${target} ${type} ${SOURCES})
@@ -156,6 +162,7 @@ macro(ADD_SIMPLE_LIBRARY target)
         install(FILES ${PUBLIC_HEADERS} DESTINATION ${INCDIR})
         install(FILES ${PRIVATE_HEADERS} DESTINATION ${INCDIR}/private/${LIBRARY_VERSION})
     endif()
+    message(STATUS "Added library: ${target}")
 endmacro()
 
 macro(ADD_SIMPLE_EXECUTABLE target)
@@ -174,7 +181,6 @@ macro(ADD_SIMPLE_EXECUTABLE target)
     else()
         set(type "")
     endif()
-    message(STATUS "Searching ${target} source and headers")
     __get_sources(SOURCES)
     # This project will generate library
     add_executable(${target} ${type} ${SOURCES})
@@ -204,6 +210,69 @@ macro(ADD_SIMPLE_EXECUTABLE target)
             BUNDLE DESTINATION .
         )
     endif()
+    message(STATUS "Added executable: ${target}")
+endmacro()
+
+macro(ADD_QML_DIR _qmldir)
+    parse_arguments(QMLDIR
+        "URI;VERSION;IMPORTS_DIR"
+        ""
+        ${ARGN}
+    )
+    if(NOT QMLDIR_IMPORTS_DIR)
+        set(QMLDIR_IMPORTS_DIR "${QT_IMPORTS_DIR}")
+    endif()
+
+    string(REPLACE "." "/" _URI ${QMLDIR_URI})
+    message(STATUS "Added qmldir: ${_qmldir} with uri ${QMLDIR_URI}")
+    set(QML_DIR_DESTINATION "${QMLDIR_IMPORTS_DIR}/${_URI}")
+    deploy_folder("${_qmldir}"
+        DESTINATION "${QML_DIR_DESTINATION}"
+        DESCRIPTION "qmldir with uri ${QMLDIR_URI}")
+endmacro()
+
+macro(ADD_QML_MODULE target)
+    parse_arguments(MODULE
+        "LIBRARIES;INCLUDES;DEFINES;URI;QML_DIR;VERSION;SOURCE_DIR;IMPORTS_DIR"
+        "CXX11"
+        ${ARGN}
+    )
+    if(MODULE_QML_DIR)
+        add_qml_dir("${MODULE_QML_DIR}"
+            URI "${MODULE_URI}"
+            VERSION "${MODULE_VERSION}"
+            IMPORTS_DIR "${MODULE_IMPORTS_DIR}"
+        )
+    endif()
+    if(NOT MODULE_IMPORTS_DIR)
+        set(MODULE_IMPORTS_DIR "${QT_IMPORTS_DIR}")
+    endif()
+
+    __get_sources(SOURCES ${MODULE_SOURCE_DIR})
+    # This project will generate library
+    add_library(${target} SHARED ${SOURCES})
+    foreach(_define ${MODULE_DEFINES})
+        add_definitions(-D${_define})
+    endforeach()
+
+    include_directories(${CMAKE_CURRENT_BINARY_DIR}
+        ${MODULE_SOURCE_DIR}
+        ${CMAKE_CURRENT_SOURCE_DIR}
+        ${MODULE_INCLUDES}
+    )
+
+    target_link_libraries(${target}
+        ${QT_LIBRARIES}
+        ${MODULE_LIBRARIES}
+    )
+
+    if(MODULE_CXX11)
+        list(APPEND opts CXX11)
+    endif()
+    update_compiler_flags(${target} ${opts})
+    message(STATUS "Added qml module: ${target} with uri ${MODULE_URI}")
+    string(REPLACE "." "/" _URI ${MODULE_URI})
+    install(TARGETS ${target} DESTINATION "${MODULE_IMPORTS_DIR}/${_URI}")
 endmacro()
 
 macro(ADD_SIMPLE_QT_TEST target)
@@ -223,7 +292,7 @@ macro(ADD_SIMPLE_QT_TEST target)
     endif()
     update_compiler_flags(${target} ${opts})
     add_test(NAME ${target} COMMAND ${target})
-    message(STATUS "Added simple test: ${target} LIBRARIES: ${TEST_LIBRARIES}")
+    message(STATUS "Added simple test: ${target}")
 endmacro()
 
 macro(APPEND_TARGET_LOCATION target list)
@@ -268,7 +337,7 @@ macro(ADD_CUSTOM_DIRECTORY sourceDir)
     )
 
     get_filename_component(_basename ${sourceDir} NAME_WE)
-    file(GLOB_RECURSE _files "${sourceDir}/*.*")
+    file(GLOB_RECURSE _files "${sourceDir}/*")
     add_custom_target(dir_${_basename} ALL
         SOURCES ${_files}
     )
@@ -283,8 +352,8 @@ macro(DEPLOY_FOLDER sourceDir)
     )
 
     get_filename_component(_basename ${sourceDir} NAME_WE)
-    file(GLOB_RECURSE _files "${sourceDir}/*.*")
-    message(STATUS "deploy qml folder: ${sourceDir}")
+    file(GLOB_RECURSE _files "${sourceDir}/*")
+    message(STATUS "deploy folder: ${sourceDir}")
     add_custom_target(qml_${_basename} ALL
         SOURCES ${_files}
     )
@@ -293,14 +362,8 @@ macro(DEPLOY_FOLDER sourceDir)
         if(IS_DIRECTORY ${_file})
             install(DIRECTORY ${_file} DESTINATION  ${FOLDER_DESTINATION})
             get_filename_component(_name ${_file} NAME_WE)
-            add_custom_command(TARGET qml_${_basename}
-                                COMMAND ${CMAKE_COMMAND} -E copy_directory ${_file} "${CMAKE_BINARY_DIR}/${_name}"
-            )
         else()
-            install(FILES ${_file} DESTINATION  ${FOLDER_DESTINATION})
-            add_custom_command(TARGET qml_${_basename}
-                                COMMAND ${CMAKE_COMMAND} -E copy_if_different ${_file} ${CMAKE_BINARY_DIR}
-            )
+            install(FILES ${_file} DESTINATION ${FOLDER_DESTINATION})
         endif()
     endforeach()
     source_group(${FOLDER_DESCRIPTION} FILES ${_files})
