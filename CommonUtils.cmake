@@ -83,8 +83,8 @@ function(__GET_SOURCES name)
         set(sourceDir ${CMAKE_CURRENT_SOURCE_DIR})
     endif()
     #Search for source and headers in source directory
-    file(GLOB_RECURSE SRC "${sourceDir}/*.cpp")
-    file(GLOB_RECURSE HDR "${sourceDir}/*.h")
+    file(GLOB_RECURSE CXX "${sourceDir}/*.cpp")
+    file(GLOB_RECURSE CC "${sourceDir}/*.c")
     file(GLOB_RECURSE FORMS "${sourceDir}/*.ui")
     file(GLOB_RECURSE QRC "${sourceDir}/*.qrc")
     if(APPLE)
@@ -95,7 +95,8 @@ function(__GET_SOURCES name)
     moc_wrap_cpp(MOC_SRCS ${HDR})
     qt4_add_resources(QRC_SOURCES ${QRC})
     list(APPEND sources
-        ${SRC}
+        ${CXX}
+        ${CC}
         ${MM}
         ${HDR}
         ${UIS_H}
