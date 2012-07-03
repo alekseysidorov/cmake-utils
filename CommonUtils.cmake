@@ -109,7 +109,7 @@ endfunction()
 
 macro(ADD_SIMPLE_LIBRARY target)
     parse_arguments(LIBRARY
-        "LIBRARIES;INCLUDES;DEFINES;VERSION;SOVERSION;DEFINE_SYMBOL"
+        "LIBRARIES;INCLUDES;DEFINES;VERSION;SOVERSION;DEFINE_SYMBOL;SOURCE_DIR;SOURCES"
         "STATIC;INTERNAL;DEVELOPER;CXX11"
         ${ARGN}
     )
@@ -126,13 +126,17 @@ macro(ADD_SIMPLE_LIBRARY target)
         list(APPEND opts CXX11)
     endif()
 
-    __get_sources(SOURCES)
+    if(NOT LIBRARY_SOURCES)
+        __get_sources(LIBRARY_SOURCES ${LIBRARY_SOURCE_DIR})
+    endif()
     # This project will generate library
-    add_library(${target} ${type} ${SOURCES})
+    add_library(${target} ${type} ${LIBRARY_SOURCES})
     foreach(_define ${LIBRARY_DEFINES})
         add_definitions(-D${_define})
     endforeach()
-    set(LIBRARY_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR})
+    if(NOT LIBRARY_SOURCE_DIR)
+        set(LIBRARY_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR})
+    endif()
 
     include_directories(${CMAKE_CURRENT_BINARY_DIR}
         ${LIBRARY_SOURCE_DIR}
@@ -158,8 +162,8 @@ macro(ADD_SIMPLE_LIBRARY target)
         )
         set(INCDIR include/${target})
         #TODO add framework creation ability
-        file(GLOB_RECURSE PUBLIC_HEADERS "${CMAKE_CURRENT_SOURCE_DIR}/*[^p].h")
-        file(GLOB_RECURSE PRIVATE_HEADERS "${CMAKE_CURRENT_SOURCE_DIR}/*_p.h")
+        file(GLOB_RECURSE PUBLIC_HEADERS "${LIBRARY_SOURCE_DIR}/*[^p].h")
+        file(GLOB_RECURSE PRIVATE_HEADERS "${LIBRARY_SOURCE_DIR}/*_p.h")
 
         install(FILES ${PUBLIC_HEADERS} DESTINATION ${INCDIR})
         install(FILES ${PRIVATE_HEADERS} DESTINATION ${INCDIR}/private/${LIBRARY_VERSION})
