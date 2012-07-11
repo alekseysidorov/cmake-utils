@@ -41,17 +41,21 @@ macro(DEPLOY_QML_MODULE _path)
     string(TOUPPER ${CMAKE_BUILD_TYPE} _type)
     set(_importPath "${QT_IMPORTS_DIR}/${_path}")
     if(EXISTS ${_importPath})
-        if(${_type} STREQUAL "DEBUG")
+        if(WIN32 OR APPLE)
+            if(${_type} STREQUAL "DEBUG")
                 set(_libPattern "[^${CMAKE_DEBUG_POSTFIX}]${CMAKE_SHARED_LIBRARY_SUFFIX}$")
-        else()
+            else()
                 set(_libPattern "${CMAKE_DEBUG_POSTFIX}${CMAKE_SHARED_LIBRARY_SUFFIX}$")
+            endif()
+        else()
+            set(_libPattern "^[*]")
         endif()
 
         #evil version
-        message(STATUS "Deployng ${_path} QtQuick module")
-        INSTALL(DIRECTORY ${_importPath} DESTINATION ${IMPORTSDIR} COMPONENT Runtime
-                REGEX "${_libPattern}" EXCLUDE
-                PATTERN "*.pdb" EXCLUDE
+        message(STATUS "Deployng ${_path} QtQuick module ${_libPattern}")
+        install(DIRECTORY ${_importPath} DESTINATION ${IMPORTSDIR} COMPONENT Runtime
+            PATTERN "*.pdb" EXCLUDE
+            REGEX "${_libPattern}" EXCLUDE
         )
     else()
         message(STATUS "Could not deploy ${_path} QtQuick module")
@@ -60,7 +64,7 @@ endmacro()
 
 macro(DEPLOY_QML_MODULES)
     foreach(plugin ${ARGN})
-            deploy_qml_module(${plugin})
+        deploy_qml_module(${plugin})
     endforeach()
 endmacro()
 
