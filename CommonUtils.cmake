@@ -239,7 +239,7 @@ endmacro()
 
 macro(ADD_QML_MODULE target)
     parse_arguments(MODULE
-        "LIBRARIES;INCLUDES;DEFINES;URI;QML_DIR;VERSION;SOURCE_DIR;IMPORTS_DIR"
+        "LIBRARIES;INCLUDES;DEFINES;URI;QML_DIR;VERSION;SOURCE_DIR;IMPORTS_DIR;PLUGIN_DIR"
         "CXX11"
         ${ARGN}
     )
@@ -278,7 +278,7 @@ macro(ADD_QML_MODULE target)
     update_compiler_flags(${target} ${opts})
     message(STATUS "Added qml module: ${target} with uri ${MODULE_URI}")
     string(REPLACE "." "/" _URI ${MODULE_URI})
-    install(TARGETS ${target} DESTINATION "${MODULE_IMPORTS_DIR}/${_URI}")
+    install(TARGETS ${target} DESTINATION "${MODULE_IMPORTS_DIR}/${_URI}/${MODULE_PLUGIN_DIR}")
 endmacro()
 
 macro(ADD_SIMPLE_QT_TEST target)

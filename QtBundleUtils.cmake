@@ -1,7 +1,7 @@
 if(NOT CMAKE_DEBUG_POSTFIX)
     if(APPLE)
         set(CMAKE_DEBUG_POSTFIX _debug)
-    else()
+    elseif(WIN32)
         set(CMAKE_DEBUG_POSTFIX d)
     endif()
 endif()
