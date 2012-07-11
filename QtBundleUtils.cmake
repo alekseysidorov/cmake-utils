@@ -52,7 +52,7 @@ macro(DEPLOY_QML_MODULE _path)
         endif()
 
         #evil version
-        message(STATUS "Deployng ${_path} QtQuick module ${_libPattern}")
+        message(STATUS "Deployng ${_path} QtQuick module")
         install(DIRECTORY ${_importPath} DESTINATION ${IMPORTSDIR} COMPONENT Runtime
             PATTERN "*.pdb" EXCLUDE
             REGEX "${_libPattern}" EXCLUDE
