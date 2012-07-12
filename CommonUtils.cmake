@@ -2,42 +2,42 @@ include(CompilerUtils)
 include(QtBundleUtils)
 include(MocUtils)
 
-MACRO(LIST_CONTAINS var value)
-  SET(${var})
-  FOREACH (value2 ${ARGN})
-    IF (${value} STREQUAL ${value2})
-      SET(${var} TRUE)
-    ENDIF (${value} STREQUAL ${value2})
-  ENDFOREACH (value2)
-ENDMACRO(LIST_CONTAINS)
+macro(LIST_CONTAINS var value)
+set(${var})
+foreach(value2 ${ARGN})
+    if(${value} STREQUAL ${value2})
+    set(${var} TRUE)
+    endif(${value} STREQUAL ${value2})
+endforeach(value2)
+endmacro(LIST_CONTAINS)
 
-MACRO(PARSE_ARGUMENTS prefix arg_names option_names)
-  SET(DEFAULT_ARGS)
-  FOREACH(arg_name ${arg_names})
+macro(PARSE_ARGUMENTS prefix arg_names option_names)
+SET(DEFAULT_ARGS)
+FOREACH(arg_name ${arg_names})
     SET(${prefix}_${arg_name})
-  ENDFOREACH(arg_name)
-  FOREACH(option ${option_names})
+ENDFOREACH(arg_name)
+FOREACH(option ${option_names})
     SET(${prefix}_${option} FALSE)
-  ENDFOREACH(option)
+ENDFOREACH(option)
 
-  SET(current_arg_name DEFAULT_ARGS)
-  SET(current_arg_list)
-  FOREACH(arg ${ARGN})
+SET(current_arg_name DEFAULT_ARGS)
+SET(current_arg_list)
+FOREACH(arg ${ARGN})
     LIST_CONTAINS(is_arg_name ${arg} ${arg_names})
     IF (is_arg_name)
-      SET(${prefix}_${current_arg_name} ${current_arg_list})
-      SET(current_arg_name ${arg})
-      SET(current_arg_list)
+    SET(${prefix}_${current_arg_name} ${current_arg_list})
+    SET(current_arg_name ${arg})
+    SET(current_arg_list)
     ELSE (is_arg_name)
-      LIST_CONTAINS(is_option ${arg} ${option_names})
-      IF (is_option)
+    LIST_CONTAINS(is_option ${arg} ${option_names})
+    IF (is_option)
         SET(${prefix}_${arg} TRUE)
-      ELSE (is_option)
+    ELSE (is_option)
         SET(current_arg_list ${current_arg_list} ${arg})
-      ENDIF (is_option)
+    ENDIF (is_option)
     ENDIF (is_arg_name)
-  ENDFOREACH(arg)
-  SET(${prefix}_${current_arg_name} ${current_arg_list})
+ENDFOREACH(arg)
+SET(${prefix}_${current_arg_name} ${current_arg_list})
 ENDMACRO(PARSE_ARGUMENTS)
 
 macro(UPDATE_COMPILER_FLAGS target)
@@ -66,9 +66,9 @@ macro(UPDATE_COMPILER_FLAGS target)
     endif()
 
     get_target_property(${target}_TYPE ${target} TYPE)
-	if(${target}_TYPE STREQUAL "STATIC_LIBRARY")
+    if(${target}_TYPE STREQUAL "STATIC_LIBRARY")
             update_cxx_compiler_flag(${target} "-fpic" PIC)
-	elseif(${target}_TYPE STREQUAL "SHARED_LIBRARY")
+    elseif(${target}_TYPE STREQUAL "SHARED_LIBRARY")
             update_cxx_compiler_flag(${target} "-fvisibility=hidden" HIDDEN_VISIBILITY)
     endif()
     set_target_properties(${target} PROPERTIES COMPILE_FLAGS "${COMPILER_FLAGS}")
@@ -109,7 +109,7 @@ endfunction()
 
 macro(ADD_SIMPLE_LIBRARY target)
     parse_arguments(LIBRARY
-        "LIBRARIES;INCLUDES;DEFINES;VERSION;SOVERSION;DEFINE_SYMBOL;SOURCE_DIR;SOURCES"
+        "LIBRARIES;INCLUDES;DEFINES;VERSION;SOVERSION;DEFINE_SYMBOL;SOURCE_DIR;SOURCES;INCLUDE_DIR"
         "STATIC;INTERNAL;DEVELOPER;CXX11"
         ${ARGN}
     )
@@ -118,7 +118,7 @@ macro(ADD_SIMPLE_LIBRARY target)
     else()
         set(type SHARED)
     endif()
-	
+
     if(LIBRARY_DEVELOPER)
         list(APPEND opts DEVELOPER)
     endif()
@@ -155,18 +155,27 @@ macro(ADD_SIMPLE_LIBRARY target)
     )
 
     if(NOT LIBRARY_INTERNAL)
+        if(LIBRARY_INCLUDE_DIR)
+            set(INCDIR include/${LIBRARY_INCLUDE_DIR})
+        else()
+            set(INCDIR include/${target})
+        endif()
+
+        #TODO add framework creation ability
+        file(GLOB_RECURSE PUBLIC_HEADERS "${LIBRARY_SOURCE_DIR}/*[^p].h")
+        file(GLOB_RECURSE PRIVATE_HEADERS "${LIBRARY_SOURCE_DIR}/*_p.h")
+
+        set(PRIVATE_INCDIR "${INCDIR}/private/${LIBRARY_VERSION}")
+        generate_include_headers(${INCDIR} ${PUBLIC_HEADERS})
+        generate_include_headers(${PRIVATE_INCDIR} ${PRIVATE_HEADERS})
+
+        install(FILES ${PUBLIC_HEADERS} DESTINATION ${INCDIR})
+        install(FILES ${PRIVATE_HEADERS} DESTINATION ${PRIVATE_INCDIR})
         install(TARGETS ${target}
             RUNTIME DESTINATION ${RLIBDIR}
             LIBRARY DESTINATION ${LIBDIR}
             ARCHIVE DESTINATION ${LIBDIR}
         )
-        set(INCDIR include/${target})
-        #TODO add framework creation ability
-        file(GLOB_RECURSE PUBLIC_HEADERS "${LIBRARY_SOURCE_DIR}/*[^p].h")
-        file(GLOB_RECURSE PRIVATE_HEADERS "${LIBRARY_SOURCE_DIR}/*_p.h")
-
-        install(FILES ${PUBLIC_HEADERS} DESTINATION ${INCDIR})
-        install(FILES ${PRIVATE_HEADERS} DESTINATION ${INCDIR}/private/${LIBRARY_VERSION})
     endif()
     message(STATUS "Added library: ${target}")
 endmacro()
@@ -308,7 +317,7 @@ endmacro()
 
 macro(CHECK_DIRECTORY_EXIST directory exists)
     if(EXISTS ${directory})
-       set(_exists FOUND)
+    set(_exists FOUND)
     else()
         set(_exists NOT_FOUND)
     endif()
@@ -321,18 +330,33 @@ macro(CHECK_QML_MODULE name exists)
     set(${exists} ${_exists})
 endmacro()
 
-macro(ADD_PUBLIC_HEADER header)
+macro(ADD_PUBLIC_HEADER header dir)
     configure_file(${CMAKE_CURRENT_SOURCE_DIR}/${header}
-        ${CMAKE_CURRENT_BINARY_DIR}/include/${header} COPYONLY)
-    list(APPEND PUBLIC_HEADERS ${CMAKE_CURRENT_BINARY_DIR}/include/${header})
+        ${CMAKE_CURRENT_BINARY_DIR}/include/${dir}/${header} COPYONLY)
+    list(APPEND PUBLIC_HEADERS ${CMAKE_CURRENT_BINARY_DIR}/include/${dir}/${header})
 endmacro()
 
-macro(GENERATE_PUBLIC_HEADER header name)
+macro(GENERATE_PUBLIC_HEADER header dir name)
     add_public_header(${header})
-    file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/include/${name}
+    file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/include/${dir}/${name}
         "#include \"${name}\"\n"
     )
     list(APPEND PUBLIC_HEADERS ${CMAKE_CURRENT_BINARY_DIR}/include/${name})
+endmacro()
+
+macro(GENERATE_INCLUDE_HEADERS _dir)
+    include_directories(${PROJECT_BINARY_DIR})
+    foreach(header ${ARGN})
+        get_filename_component(_basename ${header} NAME_WE)
+        get_filename_component(_abs_FILE ${header} ABSOLUTE)
+        #MESSAGE(STATUS ${_abs_FILE})
+
+        if(NOT EXISTS "${PROJECT_BINARY_DIR}/${_dir}/${_basename}.h" )
+                file(WRITE "${PROJECT_BINARY_DIR}/${_dir}/${_basename}.h"
+        "#include \"${_abs_FILE}\"\n"
+                )
+        endif()
+    endforeach()
 endmacro()
 
 macro(ADD_CUSTOM_DIRECTORY sourceDir)
@@ -377,4 +401,16 @@ endmacro()
 
 macro(ENABLE_QML_DEBUG_SUPPORT target)
 
+endmacro()
+
+macro(ADD_PKGCONFIG_FILE file)
+    #add pkgconfig file
+    get_filename_component(_name ${file} NAME_WE)
+    set(LIB_DESTINATION ${CMAKE_INSTALL_PREFIX}/${LIBDIR})
+    configure_file(${file}
+        ${CMAKE_CURRENT_BINARY_DIR}/${_name}.pc
+    )
+    install(FILES ${CMAKE_CURRENT_BINARY_DIR}/${_name}.pc
+        DESTINATION ${LIB_DESTINATION}/pkgconfig
+    )
 endmacro()
