@@ -109,7 +109,7 @@ endfunction()
 
 macro(ADD_SIMPLE_LIBRARY target)
     parse_arguments(LIBRARY
-        "LIBRARIES;INCLUDES;DEFINES;VERSION;SOVERSION;DEFINE_SYMBOL;SOURCE_DIR;SOURCES;INCLUDE_DIR"
+        "LIBRARIES;INCLUDES;DEFINES;VERSION;SOVERSION;DEFINE_SYMBOL;SOURCE_DIR;SOURCES;INCLUDE_DIR;PKGCONFIG_TEMPLATE"
         "STATIC;INTERNAL;DEVELOPER;CXX11"
         ${ARGN}
     )
@@ -171,13 +171,19 @@ macro(ADD_SIMPLE_LIBRARY target)
 
         install(FILES ${PUBLIC_HEADERS} DESTINATION ${INCDIR})
         install(FILES ${PRIVATE_HEADERS} DESTINATION ${PRIVATE_INCDIR})
+
+        if(LIBRARY_PKGCONFIG_TEMPLATE)
+            add_pkgconfig_file(${LIBRARY_PKGCONFIG_TEMPLATE})
+        endif()
+    endif()
+    if(type STREQUAL "SHARED" OR NOT LIBRARY_INTERNAL)
         install(TARGETS ${target}
             RUNTIME DESTINATION ${RLIBDIR}
             LIBRARY DESTINATION ${LIBDIR}
             ARCHIVE DESTINATION ${LIBDIR}
         )
     endif()
-    message(STATUS "Added library: ${target}")
+    message(STATUS "Added library: ${target} type ${type}")
 endmacro()
 
 macro(ADD_SIMPLE_EXECUTABLE target)
@@ -406,11 +412,11 @@ endmacro()
 macro(ADD_PKGCONFIG_FILE file)
     #add pkgconfig file
     get_filename_component(_name ${file} NAME_WE)
-    set(LIB_DESTINATION ${CMAKE_INSTALL_PREFIX}/${LIBDIR})
+    set(PKGCONFIG_DESTINATION ${CMAKE_INSTALL_PREFIX}/${LIBDIR}/pkgconfig)
     configure_file(${file}
         ${CMAKE_CURRENT_BINARY_DIR}/${_name}.pc
     )
     install(FILES ${CMAKE_CURRENT_BINARY_DIR}/${_name}.pc
-        DESTINATION ${LIB_DESTINATION}/pkgconfig
+        DESTINATION ${PKGCONFIG_DESTINATION}
     )
 endmacro()
