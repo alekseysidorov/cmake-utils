@@ -183,7 +183,8 @@ macro(ADD_SIMPLE_LIBRARY target)
             ARCHIVE DESTINATION ${LIBDIR}
         )
     endif()
-    message(STATUS "Added library: ${target} type ${type}")
+    string(TOLOWER ${type} _type)
+    message(STATUS "Added ${_type} library ${target}")
 endmacro()
 
 macro(ADD_SIMPLE_EXECUTABLE target)
