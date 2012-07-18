@@ -154,24 +154,24 @@ macro(ADD_SIMPLE_LIBRARY target)
         ${LIBRARY_LIBRARIES}
     )
 
+    #TODO add framework creation ability
+    if(LIBRARY_INCLUDE_DIR)
+        set(INCNAME ${LIBRARY_INCLUDE_DIR})
+    else()
+        set(INCNAME ${target})
+    endif()
+    set(INCDIR include/${INCNAME})
+
+    file(GLOB_RECURSE PUBLIC_HEADERS "${LIBRARY_SOURCE_DIR}/*[^p].h")
+    file(GLOB_RECURSE PRIVATE_HEADERS "${LIBRARY_SOURCE_DIR}/*_p.h")
+
+    set(PRIVATE_INCDIR "${INCDIR}/${LIBRARY_VERSION}/${INCNAME}/private/")
+    generate_include_headers(${INCDIR} ${PUBLIC_HEADERS})
+    generate_include_headers(${PRIVATE_INCDIR} ${PRIVATE_HEADERS})
+
     if(NOT LIBRARY_INTERNAL)
-        if(LIBRARY_INCLUDE_DIR)
-            set(INCDIR include/${LIBRARY_INCLUDE_DIR})
-        else()
-            set(INCDIR include/${target})
-        endif()
-
-        #TODO add framework creation ability
-        file(GLOB_RECURSE PUBLIC_HEADERS "${LIBRARY_SOURCE_DIR}/*[^p].h")
-        file(GLOB_RECURSE PRIVATE_HEADERS "${LIBRARY_SOURCE_DIR}/*_p.h")
-
-        set(PRIVATE_INCDIR "${INCDIR}/private/${LIBRARY_VERSION}")
-        generate_include_headers(${INCDIR} ${PUBLIC_HEADERS})
-        generate_include_headers(${PRIVATE_INCDIR} ${PRIVATE_HEADERS})
-
         install(FILES ${PUBLIC_HEADERS} DESTINATION ${INCDIR})
         install(FILES ${PRIVATE_HEADERS} DESTINATION ${PRIVATE_INCDIR})
-
         if(LIBRARY_PKGCONFIG_TEMPLATE)
             add_pkgconfig_file(${LIBRARY_PKGCONFIG_TEMPLATE})
         endif()
