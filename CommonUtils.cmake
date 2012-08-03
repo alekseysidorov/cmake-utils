@@ -421,3 +421,80 @@ macro(ADD_PKGCONFIG_FILE file)
         DESTINATION ${PKGCONFIG_DESTINATION}
     )
 endmacro()
+
+macro(FIND_MODULE module)
+    parse_arguments(MODULE
+        "PREFIX;LIBRARY_HINTS;HEADERS_DIR;INCLUDE_HINTS;GLOBAL_HEADER"
+        "NO_PKGCONFIG;NO_MACOSX_FRAMEWORK"
+        ${ARGN}
+    )
+    string(TOUPPER ${module} _name)
+    if(MODULE_PREFIX)
+        set(_name "${MODULE_PREFIX}_${_name}")
+    endif()
+
+    #try to use pkgconfig
+    if(NOT MODULE_NO_PKGCONFIG)
+        find_package(PkgConfig)
+        pkg_check_modules(${_name} ${module})
+    endif()
+    #try to find macosx framework
+    if(APPLE AND NOT MODULE_NO_MACOSX_FRAMEWORK AND NOT ${_name}_FOUND)
+        find_library(${_name}
+                NAMES ${module}
+                HINTS ${MODULE_HINTS}
+        )
+        if(${_name}_LIBRARIES)
+            set(${_name}_FOUND true)
+            list(APPEND ${MODULE_PREFIX}_LIBRARIES ${${_name}_LIBRARIES})
+            set(${_name}_INCLUDE_DIR "${${MODULE_PREFIX}_LIBRARIES}/Headers/")
+            list(APPEND ${MODULE_PREFIX}_INCLUDES
+                    ${${_name}_INCLUDE_DIR}
+            )
+        endif()
+    endif()
+    #try to use simple find
+    if(NOT ${_name}_FOUND)
+        message(STATUS "Try to find ${module}")
+        include(FindLibraryWithDebug)
+        find_path(${_name}_INCLUDE_DIR ${MODULE_GLOBAL_HEADER}
+            HINTS ${MODULE_INCLUDE_HINTS}
+            PATH_SUFFIXES ${MODULE_HEADERS_DIR}
+        )
+        find_library_with_debug(${_name}_LIBRARIES
+            WIN32_DEBUG_POSTFIX d
+            NAMES ${module}
+            HINTS ${MODULE_LIBRARY_HINTS}
+            )
+        #message("${${_name}_INCLUDE_DIR} \n ${${_name}_LIBRARIES}")
+    endif()
+
+    if(${_name}_LIBRARIES AND ${_name}_INCLUDE_DIR)
+        message(STATUS "Found ${module}: ${${_name}_LIBRARIES}")
+        set(${_name}_FOUND true)
+        list(APPEND ${MODULE_PREFIX}_LIBRARIES
+                ${${_name}_LIBRARIES}
+        )
+        list(APPEND ${MODULE_PREFIX}_INCLUDES
+                ${${_name}_INCLUDE_DIR}
+        )
+        #message("${${_name}_LIBRARIES} \n ${${_name}_INCLUDE_DIR}")
+    else(${_name}_LIBRARIES AND ${_name}_INCLUDE_DIR)
+        message(STATUS "Could NOT find ${module}")
+    endif()
+endmacro()
+
+macro(FIND_QT_MODULE module)
+    parse_arguments(MODULE
+        "HEADERS_DIR;GLOBAL_HEADER"
+        ""
+        ${ARGN}
+    )
+    find_module(${module}
+        PREFIX QT
+        HEADERS_DIR ${MODULE_HEADERS_DIR}
+        GLOBAL_HEADER ${MODULE_GLOBAL_HEADER}
+        LIBRARY_HINTS ${QT_LIBRARY_DIR}
+        INCLUDE_HINTS ${QT_INCLUDE_DIR}
+    )
+endmacro()
