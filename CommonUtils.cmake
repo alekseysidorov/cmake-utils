@@ -196,9 +196,9 @@ macro(ADD_SIMPLE_EXECUTABLE target)
 
     if(EXECUTABLE_GUI)
         if(APPLE)
-                set(type MACOSX_BUNDLE)
+			set(type MACOSX_BUNDLE)
         else()
-                set(type WIN32)
+			set(type WIN32)
         endif()
     else()
         set(type "")
@@ -445,9 +445,10 @@ macro(FIND_MODULE module)
     endif()
     #try to find macosx framework
     if(APPLE AND NOT MODULE_NO_MACOSX_FRAMEWORK AND NOT ${_name}_FOUND)
-        find_library(${_name}
+		message("Try to find MacosX framework ${module}.framework")
+		find_library(${_name}_LIBRARIES
                 NAMES ${module}
-                HINTS ${MODULE_HINTS}
+				HINTS ${MODULE_LIBRARY_HINTS}
         )
         if(${_name}_LIBRARIES)
             set(${_name}_FOUND true)
