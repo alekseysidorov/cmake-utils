@@ -126,6 +126,9 @@ macro(ADD_SIMPLE_LIBRARY target)
         list(APPEND opts CXX11)
     endif()
 
+    if(NOT LIBRARY_SOURCE_DIR)
+        set(LIBRARY_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR})
+    endif()
     if(NOT LIBRARY_SOURCES)
         __get_sources(LIBRARY_SOURCES ${LIBRARY_SOURCE_DIR})
     endif()
@@ -134,9 +137,6 @@ macro(ADD_SIMPLE_LIBRARY target)
     foreach(_define ${LIBRARY_DEFINES})
         add_definitions(-D${_define})
     endforeach()
-    if(NOT LIBRARY_SOURCE_DIR)
-        set(LIBRARY_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR})
-    endif()
 
     include_directories(${CMAKE_CURRENT_BINARY_DIR}
         ${LIBRARY_SOURCE_DIR}
@@ -255,7 +255,7 @@ endmacro()
 
 macro(ADD_QML_MODULE target)
     parse_arguments(MODULE
-        "LIBRARIES;INCLUDES;DEFINES;URI;QML_DIR;VERSION;SOURCE_DIR;IMPORTS_DIR;PLUGIN_DIR"
+        "LIBRARIES;INCLUDES;DEFINES;URI;QML_DIR;VERSION;SOURCE_DIR;SOURCES;IMPORTS_DIR;PLUGIN_DIR"
         "CXX11"
         ${ARGN}
     )
@@ -271,6 +271,7 @@ macro(ADD_QML_MODULE target)
     endif()
 
     __get_sources(SOURCES ${MODULE_SOURCE_DIR})
+	list(APPEND SOURCES ${MODULE_SOURCES})
     # This project will generate library
     add_library(${target} SHARED ${SOURCES})
     foreach(_define ${MODULE_DEFINES})
