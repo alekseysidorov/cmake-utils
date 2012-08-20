@@ -141,13 +141,13 @@ function(__GET_SOURCES name)
 endfunction()
 
 function(__CHECK_SOURCE_FILES name)
-	list_filter(${ARGV} "*.h" OUTPUT_VARIABLE HDR)
-	list_filter(${ARGV} "*.ui" OUTPUT_VARIABLE FORMS)
-	list_filter(${ARGV} "*.qrc" OUTPUT_VARIABLE QRC)
-	qt4_wrap_ui(UIS_H ${FORMS})
-	moc_wrap_cpp(MOC_SRCS ${HDR})
-	qt4_add_resources(QRC_SOURCES ${QRC})
-	list(APPEND ${name} ${ARGV} ${UIS_H} ${MOC_SRCS} ${QRC+SOURCES} PARENT_SCOPE)
+    list_filter(${ARGV} "*.h" OUTPUT_VARIABLE HDR)
+    list_filter(${ARGV} "*.ui" OUTPUT_VARIABLE FORMS)
+    list_filter(${ARGV} "*.qrc" OUTPUT_VARIABLE QRC)
+    qt4_wrap_ui(UIS_H ${FORMS})
+    moc_wrap_cpp(MOC_SRCS ${HDR})
+    qt4_add_resources(QRC_SOURCES ${QRC})
+    list(APPEND ${name} ${ARGV} ${UIS_H} ${MOC_SRCS} ${QRC_SOURCES} PARENT_SCOPE)
 endfunction()
 
 macro(ADD_SIMPLE_LIBRARY target)
@@ -156,13 +156,15 @@ macro(ADD_SIMPLE_LIBRARY target)
 		"STATIC;INTERNAL;DEVELOPER;CXX11;NO_FRAMEWORK"
         ${ARGN}
     )
-	if(APPLE)
-		set(FRAMEWORK TRUE)
-	endif()
+
+    set(FRAMEWORK FALSE)
+    if(APPLE AND NOT LIBRARY_NO_FRAMEWORK)
+	set(FRAMEWORK TRUE)
+    endif()
 
     if(LIBRARY_STATIC)
         set(type STATIC)
-		set(FRAMEWORK FALSE)
+	set(FRAMEWORK FALSE)
     else()
         set(type SHARED)
     endif()
@@ -177,8 +179,8 @@ macro(ADD_SIMPLE_LIBRARY target)
     if(NOT LIBRARY_SOURCE_DIR)
         set(LIBRARY_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR})
     endif()
-	__get_sources(LIBRARY_SOURCES ${LIBRARY_SOURCE_DIR})
-	__check_source_files(LIBRARY_SOURCES ${LIBRARY_SOURCE_FILES})
+    __get_sources(LIBRARY_SOURCES ${LIBRARY_SOURCE_DIR})
+    __check_source_files(LIBRARY_SOURCES ${LIBRARY_SOURCE_FILES})
 
     # This project will generate library
     add_library(${target} ${type} ${LIBRARY_SOURCES})
@@ -218,26 +220,26 @@ macro(ADD_SIMPLE_LIBRARY target)
     generate_include_headers(${INCDIR} ${PUBLIC_HEADERS})
     generate_include_headers(${PRIVATE_INCDIR} ${PRIVATE_HEADERS})
 	if(LIBRARY_FRAMEWORK)
-		set_source_files_properties(${PUBLIC_HEADERS}
-			PROPERTIES MACOSX_PACKAGE_LOCATION Headers)
-		set_source_files_properties(${PRIVATE_HEADERS}
-			PROPERTIES MACOSX_PACKAGE_LOCATION Headers/${LIBRARY_VERSION}/${INCNAME}/private/)
+	    set_source_files_properties(${PUBLIC_HEADERS}
+		    PROPERTIES MACOSX_PACKAGE_LOCATION Headers)
+	    set_source_files_properties(${PRIVATE_HEADERS}
+		    PROPERTIES MACOSX_PACKAGE_LOCATION Headers/${LIBRARY_VERSION}/${INCNAME}/private/)
 	endif()
 
 	if(NOT LIBRARY_INTERNAL)
-		if(NOT FRAMEWORK)
-			install(FILES ${PUBLIC_HEADERS} DESTINATION ${INCDIR})
-			install(FILES ${PRIVATE_HEADERS} DESTINATION ${PRIVATE_INCDIR})
-		endif()
+	    if(NOT FRAMEWORK)
+		    install(FILES ${PUBLIC_HEADERS} DESTINATION ${INCDIR})
+		    install(FILES ${PRIVATE_HEADERS} DESTINATION ${PRIVATE_INCDIR})
+	    endif()
         if(LIBRARY_PKGCONFIG_TEMPLATE)
-			string(TOUPPER ${target} _target)
-			if(FRAMEWORK)
-				set(${_target}_PKG_LIBS "-L${LIB_DESTINATION} -f${target}")
-				set(${_target}_PKG_INCDIR "${LIB_DESTINATION}/${target}.framework/Contents/Headers")
-			else()
-				set(${_target}_PKG_LIBS "-L${LIB_DESTINATION} -l${target}")
-				set(${_target}_PKG_INCDIR "${INCDIR}")
-			endif()
+	    string(TOUPPER ${target} _target)
+	    if(FRAMEWORK)
+		set(${_target}_PKG_LIBS "-L${LIB_DESTINATION} -f${target}")
+		set(${_target}_PKG_INCDIR "${LIB_DESTINATION}/${target}.framework/Contents/Headers")
+	    else()
+		set(${_target}_PKG_LIBS "-L${LIB_DESTINATION} -l${target}")
+		set(${_target}_PKG_INCDIR "${INCDIR}")
+	    endif()
             add_pkgconfig_file(${LIBRARY_PKGCONFIG_TEMPLATE})
         endif()
     endif()
@@ -246,7 +248,7 @@ macro(ADD_SIMPLE_LIBRARY target)
             RUNTIME DESTINATION ${RLIBDIR}
             LIBRARY DESTINATION ${LIBDIR}
             ARCHIVE DESTINATION ${LIBDIR}
-			FRAMEWORK DESTINATION ${LIBDIR}
+	    FRAMEWORK DESTINATION ${LIBDIR}
         )
     endif()
     string(TOLOWER ${type} _type)
@@ -262,9 +264,9 @@ macro(ADD_SIMPLE_EXECUTABLE target)
 
     if(EXECUTABLE_GUI)
         if(APPLE)
-			set(type MACOSX_BUNDLE)
+	    set(type MACOSX_BUNDLE)
         else()
-			set(type WIN32)
+	    set(type WIN32)
         endif()
     else()
         set(type "")
@@ -321,7 +323,7 @@ endmacro()
 
 macro(ADD_QML_MODULE target)
     parse_arguments(MODULE
-        "LIBRARIES;INCLUDES;DEFINES;URI;QML_DIR;VERSION;SOURCE_DIR;SOURCES;IMPORTS_DIR;PLUGIN_DIR"
+	"LIBRARIES;INCLUDES;DEFINES;URI;QML_DIR;VERSION;SOURCE_DIR;SOURCE_FILES;IMPORTS_DIR;PLUGIN_DIR"
         "CXX11"
         ${ARGN}
     )
@@ -337,7 +339,7 @@ macro(ADD_QML_MODULE target)
     endif()
 
     __get_sources(SOURCES ${MODULE_SOURCE_DIR})
-	list(APPEND SOURCES ${MODULE_SOURCES})
+    __check_source_files(SOURCES ${MODULE_SOURCE_FILES})
     # This project will generate library
     add_library(${target} SHARED ${SOURCES})
     foreach(_define ${MODULE_DEFINES})
