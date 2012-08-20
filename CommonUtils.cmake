@@ -110,11 +110,16 @@ endfunction()
 macro(ADD_SIMPLE_LIBRARY target)
     parse_arguments(LIBRARY
         "LIBRARIES;INCLUDES;DEFINES;VERSION;SOVERSION;DEFINE_SYMBOL;SOURCE_DIR;SOURCES;INCLUDE_DIR;PKGCONFIG_TEMPLATE"
-        "STATIC;INTERNAL;DEVELOPER;CXX11"
+		"STATIC;INTERNAL;DEVELOPER;CXX11;NO_FRAMEWORK"
         ${ARGN}
     )
+	if(APPLE)
+		set(FRAMEWORK TRUE)
+	endif()
+
     if(LIBRARY_STATIC)
         set(type STATIC)
+		set(FRAMEWORK FALSE)
     else()
         set(type SHARED)
     endif()
@@ -144,9 +149,10 @@ macro(ADD_SIMPLE_LIBRARY target)
     )
     update_compiler_flags(${target} ${opts})
     set_target_properties(${target} PROPERTIES
-            VERSION ${LIBRARY_VERSION}
-            SOVERSION ${LIBRARY_SOVERSION}
-            DEFINE_SYMBOL ${LIBRARY_DEFINE_SYMBOL}
+		VERSION ${LIBRARY_VERSION}
+		SOVERSION ${LIBRARY_SOVERSION}
+		DEFINE_SYMBOL ${LIBRARY_DEFINE_SYMBOL}
+		FRAMEWORK ${FRAMEWORK}
     )
 
     target_link_libraries(${target}
@@ -168,8 +174,14 @@ macro(ADD_SIMPLE_LIBRARY target)
     set(PRIVATE_INCDIR "${INCDIR}/${LIBRARY_VERSION}/${INCNAME}/private/")
     generate_include_headers(${INCDIR} ${PUBLIC_HEADERS})
     generate_include_headers(${PRIVATE_INCDIR} ${PRIVATE_HEADERS})
+	if(LIBRARY_FRAMEWORK)
+		set_source_files_properties(${PUBLIC_HEADERS}
+			PROPERTIES MACOSX_PACKAGE_LOCATION Headers)
+		set_source_files_properties(${PRIVATE_HEADERS}
+			PROPERTIES MACOSX_PACKAGE_LOCATION Headers/${LIBRARY_VERSION}/${INCNAME}/private/)
+	endif()
 
-    if(NOT LIBRARY_INTERNAL)
+	if(NOT LIBRARY_INTERNAL AND NOT FRAMEWORK)
         install(FILES ${PUBLIC_HEADERS} DESTINATION ${INCDIR})
         install(FILES ${PRIVATE_HEADERS} DESTINATION ${PRIVATE_INCDIR})
         if(LIBRARY_PKGCONFIG_TEMPLATE)
@@ -181,6 +193,7 @@ macro(ADD_SIMPLE_LIBRARY target)
             RUNTIME DESTINATION ${RLIBDIR}
             LIBRARY DESTINATION ${LIBDIR}
             ARCHIVE DESTINATION ${LIBDIR}
+			FRAMEWORK DESTINATION ${LIBDIR}
         )
     endif()
     string(TOLOWER ${type} _type)
