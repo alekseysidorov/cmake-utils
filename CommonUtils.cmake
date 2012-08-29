@@ -324,7 +324,9 @@ macro(ADD_QML_MODULE target)
     endif()
 
     __get_sources(SOURCES ${MODULE_SOURCE_DIR})
-    __check_source_files(SOURCES ${MODULE_SOURCE_FILES})
+    set(MODULE_EXTRA_SOURCES "")
+    __check_source_files(MODULE_EXTRA_SOURCES ${MODULE_SOURCE_FILES})
+    list(APPEND SOURCES ${MODULE_EXTRA_SOURCES})
     # This project will generate library
     add_library(${target} SHARED ${SOURCES})
     foreach(_define ${MODULE_DEFINES})
