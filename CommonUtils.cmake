@@ -196,7 +196,7 @@ macro(ADD_SIMPLE_LIBRARY target)
     else()
         set(INCNAME ${target})
     endif()
-    set(INCDIR include/${INCNAME})
+    set(INCDIR ${CMAKE_INSTALL_PREFIX}/include/${INCNAME})
 
     file(GLOB_RECURSE PUBLIC_HEADERS "${LIBRARY_SOURCE_DIR}/*[^p].h")
     file(GLOB_RECURSE PRIVATE_HEADERS "${LIBRARY_SOURCE_DIR}/*_p.h")
