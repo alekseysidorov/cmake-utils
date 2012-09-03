@@ -410,7 +410,7 @@ macro(GENERATE_INCLUDE_HEADERS _dir)
     foreach(header ${ARGN})
         get_filename_component(_basename ${header} NAME_WE)
         get_filename_component(_abs_FILE ${header} ABSOLUTE)
-        MESSAGE(STATUS "${PROJECT_BINARY_DIR}/${_dir}/${_basename}.h")
+        #message(STATUS "${PROJECT_BINARY_DIR}/${_dir}/${_basename}.h")
 
         if(NOT EXISTS "${PROJECT_BINARY_DIR}/${_dir}/${_basename}.h" )
             file(WRITE "${PROJECT_BINARY_DIR}/${_dir}/${_basename}.h"
