@@ -21,32 +21,32 @@ macro(LIST_FILTER list regex output)
 endmacro()
 
 macro(PARSE_ARGUMENTS prefix arg_names option_names)
-SET(DEFAULT_ARGS)
-FOREACH(arg_name ${arg_names})
-    SET(${prefix}_${arg_name})
-ENDFOREACH(arg_name)
-FOREACH(option ${option_names})
-    SET(${prefix}_${option} FALSE)
-ENDFOREACH(option)
+    SET(DEFAULT_ARGS)
+    FOREACH(arg_name ${arg_names})
+        SET(${prefix}_${arg_name})
+    ENDFOREACH(arg_name)
+    FOREACH(option ${option_names})
+        SET(${prefix}_${option} FALSE)
+    ENDFOREACH(option)
 
-SET(current_arg_name DEFAULT_ARGS)
-SET(current_arg_list)
-FOREACH(arg ${ARGN})
-    LIST_CONTAINS(is_arg_name ${arg} ${arg_names})
-    IF (is_arg_name)
-    SET(${prefix}_${current_arg_name} ${current_arg_list})
-    SET(current_arg_name ${arg})
+    SET(current_arg_name DEFAULT_ARGS)
     SET(current_arg_list)
-    ELSE (is_arg_name)
-    LIST_CONTAINS(is_option ${arg} ${option_names})
-    IF (is_option)
-        SET(${prefix}_${arg} TRUE)
-    ELSE (is_option)
-        SET(current_arg_list ${current_arg_list} ${arg})
-    ENDIF (is_option)
-    ENDIF (is_arg_name)
-ENDFOREACH(arg)
-SET(${prefix}_${current_arg_name} ${current_arg_list})
+    FOREACH(arg ${ARGN})
+        LIST_CONTAINS(is_arg_name ${arg} ${arg_names})
+        IF (is_arg_name)
+            SET(${prefix}_${current_arg_name} ${current_arg_list})
+            SET(current_arg_name ${arg})
+            SET(current_arg_list)
+        ELSE (is_arg_name)
+            LIST_CONTAINS(is_option ${arg} ${option_names})
+            IF (is_option)
+                SET(${prefix}_${arg} TRUE)
+            ELSE (is_option)
+                SET(current_arg_list ${current_arg_list} ${arg})
+            ENDIF (is_option)
+        ENDIF (is_arg_name)
+    ENDFOREACH(arg)
+    SET(${prefix}_${current_arg_name} ${current_arg_list})
 ENDMACRO(PARSE_ARGUMENTS)
 
 macro(UPDATE_COMPILER_FLAGS target)
@@ -76,9 +76,9 @@ macro(UPDATE_COMPILER_FLAGS target)
 
     get_target_property(${target}_TYPE ${target} TYPE)
     if(${target}_TYPE STREQUAL "STATIC_LIBRARY")
-            update_cxx_compiler_flag(${target} "-fpic" PIC)
+        update_cxx_compiler_flag(${target} "-fpic" PIC)
     elseif(${target}_TYPE STREQUAL "SHARED_LIBRARY")
-            update_cxx_compiler_flag(${target} "-fvisibility=hidden" HIDDEN_VISIBILITY)
+        update_cxx_compiler_flag(${target} "-fvisibility=hidden" HIDDEN_VISIBILITY)
     endif()
     set_target_properties(${target} PROPERTIES COMPILE_FLAGS "${COMPILER_FLAGS}")
 endmacro()
@@ -133,19 +133,19 @@ endfunction()
 
 macro(ADD_SIMPLE_LIBRARY target)
     parse_arguments(LIBRARY
-		"LIBRARIES;INCLUDES;DEFINES;VERSION;SOVERSION;DEFINE_SYMBOL;SOURCE_DIR;SOURCE_FILES;INCLUDE_DIR;PKGCONFIG_TEMPLATE"
-		"STATIC;INTERNAL;DEVELOPER;CXX11;NO_FRAMEWORK"
+        "LIBRARIES;INCLUDES;DEFINES;VERSION;SOVERSION;DEFINE_SYMBOL;SOURCE_DIR;SOURCE_FILES;INCLUDE_DIR;PKGCONFIG_TEMPLATE"
+        "STATIC;INTERNAL;DEVELOPER;CXX11;NO_FRAMEWORK"
         ${ARGN}
     )
 
     set(FRAMEWORK FALSE)
     if(APPLE AND NOT LIBRARY_NO_FRAMEWORK)
-	set(FRAMEWORK TRUE)
+        set(FRAMEWORK TRUE)
     endif()
 
     if(LIBRARY_STATIC)
         set(type STATIC)
-	set(FRAMEWORK FALSE)
+        set(FRAMEWORK FALSE)
     else()
         set(type SHARED)
     endif()
@@ -179,10 +179,10 @@ macro(ADD_SIMPLE_LIBRARY target)
     )
     update_compiler_flags(${target} ${opts})
     set_target_properties(${target} PROPERTIES
-		VERSION ${LIBRARY_VERSION}
-		SOVERSION ${LIBRARY_SOVERSION}
-		DEFINE_SYMBOL ${LIBRARY_DEFINE_SYMBOL}
-		FRAMEWORK ${FRAMEWORK}
+        VERSION ${LIBRARY_VERSION}
+        SOVERSION ${LIBRARY_SOVERSION}
+        DEFINE_SYMBOL ${LIBRARY_DEFINE_SYMBOL}
+        FRAMEWORK ${FRAMEWORK}
     )
 
     target_link_libraries(${target}
@@ -202,29 +202,29 @@ macro(ADD_SIMPLE_LIBRARY target)
 
     generate_include_headers("include/${INCNAME}" ${PUBLIC_HEADERS})
     generate_include_headers("include/${INCNAME}/${LIBRARY_VERSION}/${INCNAME}/private/" ${PRIVATE_HEADERS})
-	if(LIBRARY_FRAMEWORK)
-	    set_source_files_properties(${PUBLIC_HEADERS}
-		PROPERTIES MACOSX_PACKAGE_LOCATION Headers)
-	    set_source_files_properties(${PRIVATE_HEADERS}
-		PROPERTIES MACOSX_PACKAGE_LOCATION Headers/${LIBRARY_VERSION}/${INCNAME}/private/)
-	endif()
+    if(LIBRARY_FRAMEWORK)
+        set_source_files_properties(${PUBLIC_HEADERS}
+            PROPERTIES MACOSX_PACKAGE_LOCATION Headers)
+        set_source_files_properties(${PRIVATE_HEADERS}
+            PROPERTIES MACOSX_PACKAGE_LOCATION Headers/${LIBRARY_VERSION}/${INCNAME}/private/)
+    endif()
 
-	if(NOT LIBRARY_INTERNAL)
-	    if(NOT FRAMEWORK)
-		install(FILES ${PUBLIC_HEADERS} DESTINATION "${CMAKE_INSTALL_PREFIX}/include/${INCNAME}")
-		install(FILES ${PRIVATE_HEADERS} DESTINATION "${CMAKE_INSTALL_PREFIX}/include/${INCNAME}/${LIBRARY_VERSION}/${INCNAME}/private/")
-	    endif()
-	if(LIBRARY_PKGCONFIG_TEMPLATE)
-	    string(TOUPPER ${target} _target)
-	    if(FRAMEWORK)
-		set(${_target}_PKG_LIBS "-L${LIB_DESTINATION} -f${target}")
-		set(${_target}_PKG_INCDIR "${LIB_DESTINATION}/${target}.framework/Contents/Headers")
-	    else()
-		set(${_target}_PKG_LIBS "-L${LIB_DESTINATION} -l${target}")
-        set(${_target}_PKG_INCDIR "${CMAKE_INSTALL_PREFIX}/include/${INCDIR}")
-	    endif()
-	    add_pkgconfig_file(${LIBRARY_PKGCONFIG_TEMPLATE})
-	endif()
+    if(NOT LIBRARY_INTERNAL)
+        if(NOT FRAMEWORK)
+            install(FILES ${PUBLIC_HEADERS} DESTINATION "${CMAKE_INSTALL_PREFIX}/include/${INCNAME}")
+            install(FILES ${PRIVATE_HEADERS} DESTINATION "${CMAKE_INSTALL_PREFIX}/include/${INCNAME}/${LIBRARY_VERSION}/${INCNAME}/private/")
+        endif()
+        if(LIBRARY_PKGCONFIG_TEMPLATE)
+            string(TOUPPER ${target} _target)
+            if(FRAMEWORK)
+                set(${_target}_PKG_LIBS "-L${LIB_DESTINATION} -f${target}")
+                set(${_target}_PKG_INCDIR "${LIB_DESTINATION}/${target}.framework/Contents/Headers")
+            else()
+                set(${_target}_PKG_LIBS "-L${LIB_DESTINATION} -l${target}")
+                set(${_target}_PKG_INCDIR "${CMAKE_INSTALL_PREFIX}/include/${INCDIR}")
+            endif()
+            add_pkgconfig_file(${LIBRARY_PKGCONFIG_TEMPLATE})
+        endif()
     endif()
     if(type STREQUAL "SHARED" OR NOT LIBRARY_INTERNAL)
         install(TARGETS ${target}
@@ -234,7 +234,7 @@ macro(ADD_SIMPLE_LIBRARY target)
             FRAMEWORK DESTINATION ${LIBDIR}
         )
     endif()
-        string(TOLOWER ${type} _type)
+    string(TOLOWER ${type} _type)
     message(STATUS "Added ${_type} library ${target}")
 endmacro()
 
@@ -247,9 +247,9 @@ macro(ADD_SIMPLE_EXECUTABLE target)
 
     if(EXECUTABLE_GUI)
         if(APPLE)
-	    set(type MACOSX_BUNDLE)
+            set(type MACOSX_BUNDLE)
         else()
-	    set(type WIN32)
+            set(type WIN32)
         endif()
     else()
         set(type "")
@@ -306,7 +306,7 @@ endmacro()
 
 macro(ADD_QML_MODULE target)
     parse_arguments(MODULE
-	"LIBRARIES;INCLUDES;DEFINES;URI;QML_DIR;VERSION;SOURCE_DIR;SOURCE_FILES;IMPORTS_DIR;PLUGIN_DIR"
+        "LIBRARIES;INCLUDES;DEFINES;URI;QML_DIR;VERSION;SOURCE_DIR;SOURCE_FILES;IMPORTS_DIR;PLUGIN_DIR"
         "CXX11"
         ${ARGN}
     )
@@ -378,7 +378,7 @@ endmacro()
 
 macro(CHECK_DIRECTORY_EXIST directory exists)
     if(EXISTS ${directory})
-    set(_exists FOUND)
+        set(_exists FOUND)
     else()
         set(_exists NOT_FOUND)
     endif()
@@ -410,11 +410,11 @@ macro(GENERATE_INCLUDE_HEADERS _dir)
     foreach(header ${ARGN})
         get_filename_component(_basename ${header} NAME_WE)
         get_filename_component(_abs_FILE ${header} ABSOLUTE)
-	MESSAGE(STATUS "${PROJECT_BINARY_DIR}/${_dir}/${_basename}.h")
+        MESSAGE(STATUS "${PROJECT_BINARY_DIR}/${_dir}/${_basename}.h")
 
-	if(NOT EXISTS "${PROJECT_BINARY_DIR}/${_dir}/${_basename}.h" )
-		file(WRITE "${PROJECT_BINARY_DIR}/${_dir}/${_basename}.h"
-        "#include \"${_abs_FILE}\"\n"
+        if(NOT EXISTS "${PROJECT_BINARY_DIR}/${_dir}/${_basename}.h" )
+            file(WRITE "${PROJECT_BINARY_DIR}/${_dir}/${_basename}.h"
+            "#include \"${_abs_FILE}\"\n"
                 )
         endif()
     endforeach()
@@ -499,10 +499,10 @@ macro(FIND_MODULE module)
     endif()
     #try to find macosx framework
     if(APPLE AND NOT MODULE_NO_MACOSX_FRAMEWORK AND NOT ${_name}_FOUND)
-		message("Try to find MacosX framework ${module}.framework")
-		find_library(${_name}_LIBRARIES
+        message("Try to find MacosX framework ${module}.framework")
+        find_library(${_name}_LIBRARIES
                 NAMES ${module}
-				HINTS ${MODULE_LIBRARY_HINTS}
+                HINTS ${MODULE_LIBRARY_HINTS}
         )
         if(${_name}_LIBRARIES)
             set(${_name}_FOUND true)
