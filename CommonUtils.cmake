@@ -353,15 +353,20 @@ endmacro()
 
 macro(ADD_SIMPLE_QT_TEST target)
     parse_arguments(TEST
-        "LIBRARIES;RESOURCES"
+        "LIBRARIES;RESOURCES;SOURCES"
         "CXX11"
         ${ARGN}
     )
-    set(${target}_SRCS ${target}.cpp)
+    if(TEST_SOURCES)
+        set(${target}_SRC ${TEST_SOURCES})
+    else()
+        set(${target}_SRC ${target}.cpp)
+    endif()
+
     qt4_add_resources(RCC ${TEST_RESOURCES})
-    list(APPEND ${target}_SRCS ${RCC})
+    list(APPEND ${target}_SRC ${RCC})
     include_directories(${CMAKE_CURRENT_BINARY_DIR} ${QT_QTTEST_INCLUDE_DIR})
-    add_executable(${target} ${${target}_SRCS})
+    add_executable(${target} ${${target}_SRC})
     target_link_libraries(${target} ${TEST_LIBRARIES} ${QT_QTTEST_LIBRARY} ${QT_LIBRARIES})
     if(TEST_CXX11)
         list(APPEND opts CXX11)
