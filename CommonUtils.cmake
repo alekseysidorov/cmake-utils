@@ -75,7 +75,7 @@ macro(UPDATE_COMPILER_FLAGS target)
     endif()
 
     get_target_property(${target}_TYPE ${target} TYPE)
-    if(${target}_TYPE STREQUAL "STATIC_LIBRARY")
+    if(${target}_TYPE STREQUAL "STATIC_LIBRARY" AND NOT WIN32)
         update_cxx_compiler_flag(${target} "-fpic" PIC)
     elseif(${target}_TYPE STREQUAL "SHARED_LIBRARY")
         update_cxx_compiler_flag(${target} "-fvisibility=hidden" HIDDEN_VISIBILITY)
