@@ -366,6 +366,7 @@ macro(ADD_SIMPLE_QT_TEST target)
     else()
         set(${target}_SRC ${target}.cpp)
     endif()
+    __check_source_files(${target}_SRC ${${target}_SRC})
 
     qt4_add_resources(RCC ${TEST_RESOURCES})
     list(APPEND ${target}_SRC ${RCC})
