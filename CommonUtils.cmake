@@ -12,7 +12,9 @@ endforeach(value2)
 endmacro(LIST_CONTAINS)
 
 macro(LIST_FILTER list regex output)
+    unset(${output})
     foreach(item ${list})
+	string(REGEX MATCH ${regex} item2 ${item})
 	if(item MATCHES ${regex})
             list(APPEND ${output} ${item})
 	endif()
@@ -100,17 +102,17 @@ function(__GET_SOURCES name)
         file(GLOB_RECURSE MM "${sourceDir}/*.mm")
     endif()
 
-    qt4_wrap_ui(UIS_H ${FORMS})
-    moc_wrap_cpp(MOC_SRCS ${HDR})
-    qt4_add_resources(QRC_SOURCES ${QRC})
+    qt4_wrap_ui(${name}_UIS_H ${FORMS})
+    moc_wrap_cpp(${name}_MOC_SRCS ${HDR})
+    qt4_add_resources(${name}_QRC_SOURCES ${QRC})
     list(APPEND sources
         ${CXX}
         ${CC}
         ${MM}
         ${HDR}
-        ${UIS_H}
-        ${MOC_SRCS}
-        ${QRC_SOURCES}
+	${${name}_UIS_H}
+	${${name}_MOC_SRCS}
+	${${name}_QRC_SOURCES}
     )
     set(${name} ${sources} PARENT_SCOPE)
 endfunction()
@@ -123,11 +125,18 @@ function(__CHECK_SOURCE_FILES name)
     list_filter("${ARGV}" ".*\\\\.ui" FORMS)
     list_filter("${ARGV}" ".*\\\\.qrc" QRC)
 
-    qt4_wrap_ui(UIS_H ${FORMS})
-    moc_wrap_cpp(MOC_SRCS ${HDR} ${CXX} ${MM})
-    qt4_add_resources(QRC_SOURCES ${QRC})
+    qt4_wrap_ui(${name}_UIS_H ${FORMS})
+    moc_wrap_cpp(${name}_MOC_SRCS ${HDR} ${CXX} ${MM})
+    qt4_add_resources(${name}_QRC_SOURCES ${QRC})
     set(__sources "")
-    list(APPEND _extra_sources ${CXX} ${CC} ${MM} ${HDR} ${UIS_H} ${MOC_SRCS} ${QRC_SOURCES})
+    list(APPEND _extra_sources
+	${CXX}
+	${CC}
+	${MM}
+	${HDR}
+	${${name}_UIS_H}
+	${${name}_MOC_SRCS}
+	${${name}_QRC_SOURCES})
     set(${name} ${_extra_sources} PARENT_SCOPE)
 endfunction()
 
@@ -324,7 +333,9 @@ macro(ADD_QML_MODULE target)
 
     __get_sources(SOURCES ${MODULE_SOURCE_DIR})
     set(MODULE_EXTRA_SOURCES "")
+
     __check_source_files(MODULE_EXTRA_SOURCES ${MODULE_SOURCE_FILES})
+    message("${target}: ${MODULE_SOURCE_FILES}")
     list(APPEND SOURCES ${MODULE_EXTRA_SOURCES})
     # This project will generate library
     add_library(${target} SHARED ${SOURCES})
@@ -364,10 +375,9 @@ macro(ADD_SIMPLE_QT_TEST target)
         set(${target}_SRC ${target}.cpp)
     endif()
     list(APPEND ${target}_SRC ${TEST_RESOURCES})
-    __check_source_files(_${target}_sources ${${target}_SRC})
-
+    __check_source_files(${target}_SRC ${${target}_SRC})
     include_directories(${CMAKE_CURRENT_BINARY_DIR} ${QT_QTTEST_INCLUDE_DIR})
-    add_executable(${target} ${_${target}_sources})
+    add_executable(${target} ${${target}_SRC})
     target_link_libraries(${target} ${TEST_LIBRARIES} ${QT_QTTEST_LIBRARY} ${QT_LIBRARIES})
     if(TEST_CXX11)
         list(APPEND opts CXX11)
@@ -438,7 +448,9 @@ macro(ADD_CUSTOM_DIRECTORY sourceDir)
     add_custom_target(dir_${_basename} ALL
         SOURCES ${_files}
     )
-    source_group(${DIR_DESCRIPTION} FILES ${_files})
+    if(DIR_DESCRIPTION)
+	source_group(${DIR_DESCRIPTION} FILES ${_files})
+    endif()
 endmacro()
 
 macro(DEPLOY_FOLDER sourceDir)
@@ -449,10 +461,9 @@ macro(DEPLOY_FOLDER sourceDir)
     )
 
     get_filename_component(_basename ${sourceDir} NAME_WE)
-    get_filename_component(_destname ${FOLDER_DESTINATION} NAME_WE)
     file(GLOB_RECURSE _files "${sourceDir}/*")
     message(STATUS "deploy folder: ${sourceDir}")
-    add_custom_target(qml_${_destname} ALL
+    add_custom_target(qml_${_basename} ALL
         SOURCES ${_files}
     )
     file(GLOB _files "${sourceDir}/*")
@@ -464,7 +475,9 @@ macro(DEPLOY_FOLDER sourceDir)
             install(FILES ${_file} DESTINATION ${FOLDER_DESTINATION})
         endif()
     endforeach()
-    source_group(${FOLDER_DESCRIPTION} FILES ${_files})
+    if(FOLDER_DESCRIPTION)
+	source_group(${FOLDER_DESCRIPTION} FILES ${_files})
+    endif()
 endmacro()
 
 macro(ENABLE_QML_DEBUG_SUPPORT target)
