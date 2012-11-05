@@ -212,7 +212,7 @@ macro(ADD_SIMPLE_LIBRARY target)
 
     generate_include_headers("include/${INCNAME}" ${PUBLIC_HEADERS})
     generate_include_headers("include/${INCNAME}/${LIBRARY_VERSION}/${INCNAME}/private/" ${PRIVATE_HEADERS})
-    if(LIBRARY_FRAMEWORK)
+	if(FRAMEWORK)
         set_source_files_properties(${PUBLIC_HEADERS}
             PROPERTIES MACOSX_PACKAGE_LOCATION Headers)
         set_source_files_properties(${PRIVATE_HEADERS}
