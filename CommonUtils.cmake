@@ -448,9 +448,10 @@ macro(DEPLOY_FOLDER sourceDir)
     )
 
     get_filename_component(_basename ${sourceDir} NAME_WE)
+    get_filename_component(_destname ${FOLDER_DESTINATION} NAME_WE)
     file(GLOB_RECURSE _files "${sourceDir}/*")
     message(STATUS "deploy folder: ${sourceDir}")
-    add_custom_target(qml_${_basename} ALL
+    add_custom_target(qml_${_destname} ALL
         SOURCES ${_files}
     )
     file(GLOB _files "${sourceDir}/*")
