@@ -250,7 +250,7 @@ endmacro()
 
 macro(ADD_SIMPLE_EXECUTABLE target)
     parse_arguments(EXECUTABLE
-        "LIBRARIES;INCLUDES;DEFINES"
+	"LIBRARIES;INCLUDES;DEFINES;SOURCE_DIR"
         "INTERNAL;GUI;CXX11"
         ${ARGN}
     )
@@ -264,7 +264,12 @@ macro(ADD_SIMPLE_EXECUTABLE target)
     else()
         set(type "")
     endif()
-    __get_sources(SOURCES)
+
+    if(NOT EXECUTABLE_SOURCE_DIR)
+	set(EXECUTABLE_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR})
+    endif()
+
+    __get_sources(SOURCES ${EXECUTABLE_SOURCE_DIR})
     # This project will generate library
     add_executable(${target} ${type} ${SOURCES})
     foreach(_define ${EXECUTABLE_DEFINES})
@@ -442,9 +447,10 @@ macro(ADD_CUSTOM_DIRECTORY sourceDir)
         ${ARGN}
     )
 
+    string(RANDOM tail)
     get_filename_component(_basename ${sourceDir} NAME_WE)
     file(GLOB_RECURSE _files "${sourceDir}/*")
-    add_custom_target(dir_${_basename} ALL
+    add_custom_target(dir_${_basename}_${tail} ALL
         SOURCES ${_files}
     )
     if(DIR_DESCRIPTION)
