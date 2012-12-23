@@ -66,6 +66,7 @@ macro(UPDATE_COMPILER_FLAGS target)
             update_cxx_compiler_flag(${target} "-Wextra" WEXTRA)
             update_cxx_compiler_flag(${target} "-Wnon-virtual-dtor" WDTOR)
             update_cxx_compiler_flag(${target} "-Werror" WERROR)
+			#update_cxx_compiler_flag(${target} "-Wdocumentation" WERROR)
         endif()
     endif()
 
