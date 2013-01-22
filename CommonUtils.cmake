@@ -198,7 +198,7 @@ macro(ADD_SIMPLE_LIBRARY target)
 
     include_directories(${CMAKE_CURRENT_BINARY_DIR}
         ${LIBRARY_SOURCE_DIR}
-        ${LIBRARY_INCLUDES}
+	${LIBRARY_INCLUDES}
     )
     update_compiler_flags(${target} ${opts})
     use_qt_modules(${target} ${LIBRARY_QT})
@@ -210,6 +210,7 @@ macro(ADD_SIMPLE_LIBRARY target)
     )
 
     target_link_libraries(${target}
+	${QT_LIBRARIES}
         ${LIBRARY_LIBRARIES}
     )
 
