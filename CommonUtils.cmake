@@ -2,11 +2,13 @@ include(CompilerUtils)
 include(QtBundleUtils)
 include(MocUtils)
 
+set(CMAKE_AUTOMOC true)
+
 macro(LIST_CONTAINS var value)
 set(${var})
 foreach(value2 ${ARGN})
     if(${value} STREQUAL ${value2})
-    set(${var} TRUE)
+	set(${var} TRUE)
     endif(${value} STREQUAL ${value2})
 endforeach(value2)
 endmacro(LIST_CONTAINS)
@@ -22,33 +24,33 @@ macro(LIST_FILTER list regex output)
 endmacro()
 
 macro(PARSE_ARGUMENTS prefix arg_names option_names)
-    SET(DEFAULT_ARGS)
-    FOREACH(arg_name ${arg_names})
-        SET(${prefix}_${arg_name})
-    ENDFOREACH(arg_name)
-    FOREACH(option ${option_names})
-        SET(${prefix}_${option} FALSE)
-    ENDFOREACH(option)
+    set(DEFAULT_ARGS)
+    foreach(arg_name ${arg_names})
+	set(${prefix}_${arg_name})
+    endforeach(arg_name)
+    foreach(option ${option_names})
+	set(${prefix}_${option} FALSE)
+    endforeach(option)
 
-    SET(current_arg_name DEFAULT_ARGS)
-    SET(current_arg_list)
-    FOREACH(arg ${ARGN})
-        LIST_CONTAINS(is_arg_name ${arg} ${arg_names})
-        IF (is_arg_name)
-            SET(${prefix}_${current_arg_name} ${current_arg_list})
-            SET(current_arg_name ${arg})
-            SET(current_arg_list)
-        ELSE (is_arg_name)
-            LIST_CONTAINS(is_option ${arg} ${option_names})
-            IF (is_option)
-                SET(${prefix}_${arg} TRUE)
-            ELSE (is_option)
-                SET(current_arg_list ${current_arg_list} ${arg})
-            ENDIF (is_option)
-        ENDIF (is_arg_name)
-    ENDFOREACH(arg)
+    set(current_arg_name DEFAULT_ARGS)
+    set(current_arg_list)
+    foreach(arg ${ARGN})
+	list_contains(is_arg_name ${arg} ${arg_names})
+	if(is_arg_name)
+	    set(${prefix}_${current_arg_name} ${current_arg_list})
+	    set(current_arg_name ${arg})
+	    set(current_arg_list)
+	else(is_arg_name)
+	    list_contains(is_option ${arg} ${option_names})
+	    if(is_option)
+		set(${prefix}_${arg} TRUE)
+	    else(is_option)
+		set(current_arg_list ${current_arg_list} ${arg})
+	    endif(is_option)
+	endif(is_arg_name)
+    endforeach(arg)
     SET(${prefix}_${current_arg_name} ${current_arg_list})
-ENDMACRO(PARSE_ARGUMENTS)
+endmacro(PARSE_ARGUMENTS)
 
 macro(UPDATE_COMPILER_FLAGS target)
     parse_arguments(FLAGS
@@ -103,9 +105,6 @@ function(__GET_SOURCES name)
         file(GLOB_RECURSE MM "${sourceDir}/*.mm")
     endif()
 
-    qt4_wrap_ui(${name}_UIS_H ${FORMS})
-    moc_wrap_cpp(${name}_MOC_SRCS ${HDR})
-    qt4_add_resources(${name}_QRC_SOURCES ${QRC})
     list(APPEND sources
         ${CXX}
         ${CC}
@@ -126,9 +125,6 @@ function(__CHECK_SOURCE_FILES name)
     list_filter("${ARGV}" ".*\\\\.ui" FORMS)
     list_filter("${ARGV}" ".*\\\\.qrc" QRC)
 
-    qt4_wrap_ui(${name}_UIS_H ${FORMS})
-    moc_wrap_cpp(${name}_MOC_SRCS ${HDR} ${CXX} ${MM})
-    qt4_add_resources(${name}_QRC_SOURCES ${QRC})
     set(__sources "")
     list(APPEND _extra_sources
 	${CXX}
@@ -141,9 +137,25 @@ function(__CHECK_SOURCE_FILES name)
     set(${name} ${_extra_sources} PARENT_SCOPE)
 endfunction()
 
+macro(use_qt_modules target)
+    if(USE_QT5)
+	find_package(Qt5Core QUIET)
+    endif()
+    if(Qt5Core_DIR)
+	add_definitions("-DQT_DISABLE_DEPRECATED_BEFORE=0")
+	qt5_use_modules(${target} ${ARGN})
+    else()
+	foreach(_module ${ARGN})
+	    list(APPEND _modules Qt${_module})
+	endforeach()
+	find_package(Qt4 COMPONENTS ${_modules} QUIET)
+	include(UseQt4)
+    endif()
+endmacro()
+
 macro(ADD_SIMPLE_LIBRARY target)
     parse_arguments(LIBRARY
-        "LIBRARIES;INCLUDES;DEFINES;VERSION;SOVERSION;DEFINE_SYMBOL;SOURCE_DIR;SOURCE_FILES;INCLUDE_DIR;PKGCONFIG_TEMPLATE"
+	"LIBRARIES;INCLUDES;DEFINES;VERSION;SOVERSION;DEFINE_SYMBOL;SOURCE_DIR;SOURCE_FILES;INCLUDE_DIR;PKGCONFIG_TEMPLATE;QT"
         "STATIC;INTERNAL;DEVELOPER;CXX11;NO_FRAMEWORK"
         ${ARGN}
     )
@@ -189,6 +201,7 @@ macro(ADD_SIMPLE_LIBRARY target)
         ${LIBRARY_INCLUDES}
     )
     update_compiler_flags(${target} ${opts})
+    use_qt_modules(${target} ${LIBRARY_QT})
     set_target_properties(${target} PROPERTIES
         VERSION ${LIBRARY_VERSION}
         SOVERSION ${LIBRARY_SOVERSION}
@@ -197,7 +210,6 @@ macro(ADD_SIMPLE_LIBRARY target)
     )
 
     target_link_libraries(${target}
-        ${QT_LIBRARIES}
         ${LIBRARY_LIBRARIES}
     )
 
@@ -251,7 +263,7 @@ endmacro()
 
 macro(ADD_SIMPLE_EXECUTABLE target)
     parse_arguments(EXECUTABLE
-	"LIBRARIES;INCLUDES;DEFINES;SOURCE_DIR"
+	"LIBRARIES;INCLUDES;DEFINES;SOURCE_DIR;QT"
         "INTERNAL;GUI;CXX11"
         ${ARGN}
     )
@@ -287,10 +299,11 @@ macro(ADD_SIMPLE_EXECUTABLE target)
     endif()
 
     update_compiler_flags(${target} ${opts})
+    use_qt_modules(${target} ${EXECUTABLE_QT})
 
     target_link_libraries(${target}
-        ${QT_LIBRARIES}
         ${EXECUTABLE_LIBRARIES}
+	${QT_LIBRARIES}
     )
 
     if(NOT EXECUTABLE_INTERNAL)
@@ -322,7 +335,7 @@ endmacro()
 
 macro(ADD_QML_MODULE target)
     parse_arguments(MODULE
-        "LIBRARIES;INCLUDES;DEFINES;URI;QML_DIR;VERSION;SOURCE_DIR;SOURCE_FILES;IMPORTS_DIR;PLUGIN_DIR"
+	"LIBRARIES;INCLUDES;DEFINES;URI;QML_DIR;VERSION;SOURCE_DIR;SOURCE_FILES;IMPORTS_DIR;PLUGIN_DIR;QT"
         "CXX11"
         ${ARGN}
     )
@@ -363,6 +376,7 @@ macro(ADD_QML_MODULE target)
         list(APPEND opts CXX11)
     endif()
     update_compiler_flags(${target} ${opts})
+    use_qt_modules(${target} ${MODULE_QT})
     message(STATUS "Added qml module: ${target} with uri ${MODULE_URI}")
     string(REPLACE "." "/" _URI ${MODULE_URI})
     install(TARGETS ${target} DESTINATION "${MODULE_IMPORTS_DIR}/${_URI}/${MODULE_PLUGIN_DIR}")
@@ -370,20 +384,24 @@ endmacro()
 
 macro(ADD_SIMPLE_QT_TEST target)
     parse_arguments(TEST
-        "LIBRARIES;RESOURCES;SOURCES"
+	"LIBRARIES;RESOURCES;SOURCES;QT"
         "CXX11"
         ${ARGN}
     )
+
     if(TEST_SOURCES)
         set(${target}_SRC ${TEST_SOURCES})
     else()
         set(${target}_SRC ${target}.cpp)
     endif()
+    list(APPEND TEST_QT Test)
+
     list(APPEND ${target}_SRC ${TEST_RESOURCES})
     __check_source_files(${target}_SRC ${${target}_SRC})
-    include_directories(${CMAKE_CURRENT_BINARY_DIR} ${QT_QTTEST_INCLUDE_DIR})
+    include_directories(${CMAKE_CURRENT_BINARY_DIR})
     add_executable(${target} ${${target}_SRC})
-    target_link_libraries(${target} ${TEST_LIBRARIES} ${QT_QTTEST_LIBRARY} ${QT_LIBRARIES})
+    use_qt_modules(${target} ${TEST_QT})
+    target_link_libraries(${target} ${TEST_LIBRARIES} ${QT_LIBRARIES})
     if(TEST_CXX11)
         list(APPEND opts CXX11)
     endif()
