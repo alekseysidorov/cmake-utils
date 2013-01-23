@@ -340,15 +340,16 @@ macro(ADD_QML_MODULE target)
         "CXX11"
         ${ARGN}
     )
+
+    if(NOT MODULE_IMPORTS_DIR)
+	set(MODULE_IMPORTS_DIR "${QT_IMPORTS_DIR}")
+    endif()
     if(MODULE_QML_DIR)
         add_qml_dir("${MODULE_QML_DIR}"
             URI "${MODULE_URI}"
             VERSION "${MODULE_VERSION}"
             IMPORTS_DIR "${MODULE_IMPORTS_DIR}"
         )
-    endif()
-    if(NOT MODULE_IMPORTS_DIR)
-        set(MODULE_IMPORTS_DIR "${QT_IMPORTS_DIR}")
     endif()
 
     __get_sources(SOURCES ${MODULE_SOURCE_DIR})
