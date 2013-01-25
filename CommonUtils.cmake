@@ -137,7 +137,7 @@ function(__CHECK_SOURCE_FILES name)
     set(${name} ${_extra_sources} PARENT_SCOPE)
 endfunction()
 
-macro(use_qt_modules target)
+macro(qt_use_modules target)
     if(USE_QT5)
 	find_package(Qt5Core QUIET)
     endif()
@@ -202,7 +202,7 @@ macro(ADD_SIMPLE_LIBRARY target)
 	${LIBRARY_INCLUDES}
     )
     update_compiler_flags(${target} ${opts})
-    use_qt_modules(${target} ${LIBRARY_QT})
+    qt_use_modules(${target} ${LIBRARY_QT})
     set_target_properties(${target} PROPERTIES
         VERSION ${LIBRARY_VERSION}
         SOVERSION ${LIBRARY_SOVERSION}
@@ -301,7 +301,7 @@ macro(ADD_SIMPLE_EXECUTABLE target)
     endif()
 
     update_compiler_flags(${target} ${opts})
-    use_qt_modules(${target} ${EXECUTABLE_QT})
+    qt_use_modules(${target} ${EXECUTABLE_QT})
 
     target_link_libraries(${target}
         ${EXECUTABLE_LIBRARIES}
@@ -379,7 +379,7 @@ macro(ADD_QML_MODULE target)
         list(APPEND opts CXX11)
     endif()
     update_compiler_flags(${target} ${opts})
-    use_qt_modules(${target} ${MODULE_QT})
+    qt_use_modules(${target} ${MODULE_QT})
     message(STATUS "Added qml module: ${target} with uri ${MODULE_URI}")
     string(REPLACE "." "/" _URI ${MODULE_URI})
     install(TARGETS ${target} DESTINATION "${MODULE_IMPORTS_DIR}/${_URI}/${MODULE_PLUGIN_DIR}")
@@ -403,7 +403,7 @@ macro(ADD_SIMPLE_QT_TEST target)
     __check_source_files(${target}_SRC ${${target}_SRC})
     include_directories(${CMAKE_CURRENT_BINARY_DIR})
     add_executable(${target} ${${target}_SRC})
-    use_qt_modules(${target} ${TEST_QT})
+    qt_use_modules(${target} ${TEST_QT})
     target_link_libraries(${target} ${TEST_LIBRARIES} ${QT_LIBRARIES})
     if(TEST_CXX11)
         list(APPEND opts CXX11)
