@@ -110,9 +110,7 @@ function(__GET_SOURCES name)
         ${CC}
         ${MM}
         ${HDR}
-	${${name}_UIS_H}
-	${${name}_MOC_SRCS}
-	${${name}_QRC_SOURCES}
+	${QRC}
     )
     set(${name} ${sources} PARENT_SCOPE)
 endfunction()
@@ -125,15 +123,26 @@ function(__CHECK_SOURCE_FILES name)
     list_filter("${ARGV}" ".*\\\\.ui" FORMS)
     list_filter("${ARGV}" ".*\\\\.qrc" QRC)
 
+    if(USE_QT5)
+	find_package(Qt5Core QUIET)
+    else()
+	find_package(Qt4 COMPONENTS QtCore QUIET REQUIRED)
+    endif()
+
+    if(Qt5Core_DIR)
+	qt5_add_resources(${name}_QRC ${QRC})
+    else()
+	qt4_add_resources(${name}_QRC ${QRC})
+    endif()
+
     set(__sources "")
     list(APPEND _extra_sources
 	${CXX}
 	${CC}
 	${MM}
 	${HDR}
-	${${name}_UIS_H}
-	${${name}_MOC_SRCS}
-	${${name}_QRC_SOURCES})
+	${${name}_QRC}
+    )
     set(${name} ${_extra_sources} PARENT_SCOPE)
 endfunction()
 
