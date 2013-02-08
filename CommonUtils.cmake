@@ -84,6 +84,7 @@ macro(UPDATE_COMPILER_FLAGS target)
     elseif(${target}_TYPE STREQUAL "SHARED_LIBRARY")
         update_cxx_compiler_flag(${target} "-fvisibility=hidden" HIDDEN_VISIBILITY)
     endif()
+    update_cxx_compiler_flag(${target} "-flto" LTO)
     set_target_properties(${target} PROPERTIES COMPILE_FLAGS "${COMPILER_FLAGS}")
 endmacro()
 
