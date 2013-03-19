@@ -64,8 +64,9 @@ macro(qt_use_modules target)
 	    list(APPEND _modules Qt${_module})
 	endforeach()
 	find_package(Qt4 COMPONENTS ${_modules} QUIET)
+        include(UseQt4)
 	target_link_libraries(${target} ${QT_LIBRARIES})
-	include(UseQt4)
+        set(${target}_libraries ${QT_LIBRARIES})
     endif()
 endmacro()
 
@@ -389,8 +390,9 @@ macro(ADD_QML_MODULE target)
         ${MODULE_INCLUDES}
     )
 
+    qt_use_modules(${target} ${MODULE_QT})
     target_link_libraries(${target}
-        ${QT_LIBRARIES}
+        ${${target}_libraries}
         ${MODULE_LIBRARIES}
     )
 
@@ -398,7 +400,6 @@ macro(ADD_QML_MODULE target)
         list(APPEND opts CXX11)
     endif()
     update_compiler_flags(${target} ${opts})
-    qt_use_modules(${target} ${MODULE_QT})
     message(STATUS "Added qml module: ${target} with uri ${MODULE_URI}")
     string(REPLACE "." "/" _URI ${MODULE_URI})
     install(TARGETS ${target} DESTINATION "${MODULE_IMPORTS_DIR}/${_URI}/${MODULE_PLUGIN_DIR}")
