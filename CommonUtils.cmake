@@ -569,7 +569,7 @@ macro(FIND_MODULE module)
     endif()
     #try to find macosx framework
     if(APPLE AND NOT MODULE_NO_MACOSX_FRAMEWORK AND NOT ${_name}_FOUND)
-        message("Try to find MacosX framework ${module}.framework")
+        message(STATUS "Try to find MacosX framework ${module}.framework")
         find_library(${_name}_LIBRARIES
                 NAMES ${module}
                 HINTS ${MODULE_LIBRARY_HINTS}
@@ -596,7 +596,7 @@ macro(FIND_MODULE module)
             NAMES ${module}
             HINTS ${MODULE_LIBRARY_HINTS}
             )
-        #message("${${_name}_INCLUDE_DIR} \n ${${_name}_LIBRARIES}")
+        #message("${MODULE_HEADERS_DIR} ${MODULE_INCLUDE_HINTS} ${QT_INCLUDE_DIR}")
     endif()
 
     #include(FindPackageHandleStandardArgs)
@@ -629,6 +629,5 @@ macro(FIND_QT_MODULE module)
         HEADERS_DIR ${MODULE_HEADERS_DIR}
         GLOBAL_HEADER ${MODULE_GLOBAL_HEADER}
         LIBRARY_HINTS ${QT_LIBRARY_DIR}
-        INCLUDE_HINTS ${QT_INCLUDE_DIR}
     )
 endmacro()
