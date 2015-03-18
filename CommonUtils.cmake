@@ -19,6 +19,7 @@ macro(UPDATE_COMPILER_FLAGS target)
     set_target_properties(${target} PROPERTIES COMPILE_FLAGS "${COMPILER_FLAGS}")
 endmacro()
 
+
 macro(ADD_SIMPLE_LIBRARY target type)
     if(NOT DEFINED type)
         set(type STATIC)
